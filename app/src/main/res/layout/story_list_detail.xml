@@ -17,7 +17,7 @@
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:id="@+id/url"
-                tools:text="http:// Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. eu"
+                tools:text="http://Prow scuttle parrel provost Sail ho shrouds spirits boom mizzenmast yardarm."
                 android:layout_weight="1"/>
         <TextView
                 android:layout_width="wrap_content"
