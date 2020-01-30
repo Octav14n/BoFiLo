@@ -1,5 +1,6 @@
 package eu.schnuff.bofilo
 
+import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,12 +44,12 @@ class StoryListAdapter() : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>()
             val p = item.progress ?: 0
             val m = item.max
             holder.view.progress.visibility = View.VISIBLE
-            if (m != null && item == StoryDownloadService.ActiveItem) {
+            if (item.url == StoryDownloadService.ActiveItem?.url) {
                 holder.view.progress_text.visibility = View.VISIBLE
                 holder.view.progress.isIndeterminate = false
-                holder.view.progress_text.text = "%d/%d".format(p, m)
+                holder.view.progress_text.text = Resources.getSystem().getString(R.string.story_list_progress).format(p, m ?: "∞")
                 holder.view.progress.progress = p
-                holder.view.progress.max = m
+                holder.view.progress.max = m ?: (p + 1)
             } else {
                 holder.view.progress_text.visibility = View.GONE
                 holder.view.progress.isIndeterminate = true

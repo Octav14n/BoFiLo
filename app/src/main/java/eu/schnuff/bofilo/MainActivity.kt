@@ -9,6 +9,7 @@ import android.view.MenuItem
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.SimpleItemAnimator
 import eu.schnuff.bofilo.persistence.StoryListViewModel
+import eu.schnuff.bofilo.settings.SettingsActivity
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -47,7 +48,11 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener { view ->
             // Test urls.
             for (url in listOf(
-                // author: Rorschach's Blot
+                // author: Rorschach's Blot (short)
+                "https://www.fanfiction.net/s/2100544/1/Past-Lives",
+                "https://www.fanfiction.net/s/3248583/1/Ground-Hog-Day",
+                "https://www.fanfiction.net/s/3635811/1/Hermione-the-Harem-Girl",
+                // author: Rorschach's Blot (longer)
                 "https://www.fanfiction.net/s/2318355/1/Make-A-Wish",
                 "https://www.fanfiction.net/s/3032621/1/The-Hunt-For-Harry-Potter",
                 "https://www.fanfiction.net/s/3695087/1/Larceny-Lechery-and-Luna-Lovegood",
@@ -57,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                 "https://www.tthfanfic.org/Story-21322/dogbertcarroll+I+wouldn+t+exactly+call+that+sitting.htm",
                 // site: SpaceBattles.com
                 "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/"
-            )) {
+            ).reversed()) {
                 scheduleDownload(url)
             }
 
@@ -79,14 +84,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun scheduleDownload(url: String) {
-        GlobalScope.async {
-            val newUrl = storyListViewModel!!.add(url).url
-            startService(Intent(this@MainActivity, StoryDownloadService::class.java).apply {
-                putExtra(StoryDownloadService.PARAM_URL, newUrl)
-                // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
-            })
-        }
+    private fun scheduleDownload(url: String) = GlobalScope.async {
+        val newUrl = storyListViewModel!!.add(url).url
+        startService(Intent(this@MainActivity, StoryDownloadService::class.java).apply {
+            putExtra(StoryDownloadService.PARAM_URL, newUrl)
+            // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -100,7 +103,10 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

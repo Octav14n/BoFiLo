@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-from java import jint, static_proxy
 
 import fanficfare.cli
 
@@ -29,6 +28,12 @@ class MyStory(object):
             handler.title(value)
             # print("Story Chapter count: %d" % self._maxChapterCount)
 
+    def formatFileName(self, template, allowunsafefilename=True):
+        filename = self.story.formatFileName(template, allowunsafefilename)
+        if handler:
+            handler.filename(filename)
+        return filename
+
     def __getattr__(self, attr):
         # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
         # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
@@ -43,22 +48,24 @@ def my_get_adapter(config, url, anyurl=False):
     return adapter
 
 
-def start(my_handler, url):
+def start(my_handler, url, save_cache=False):
     global handler
     handler = my_handler
     fanficfare.cli.adapters.getAdapter = my_get_adapter
     print("Now starting Story with url '%s'." % url)
-    fanficfare.cli.main([
-        '--save-cache',
+    options = [
         # '--meta-only',
         # '--json-meta',
         # '--no-meta-chapters',
         # '--progress',
         # '--debug',
         '-u',
+        '--non-interactive',
         url
-    ],
-        passed_defaultsini=default_ini)
+    ]
+    if save_cache:
+        options.insert(0, '--save-cache')
+    fanficfare.cli.main(options, passed_defaultsini=default_ini)
 
 
 if __name__ == "__main__":
