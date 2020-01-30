@@ -3,6 +3,9 @@ import os
 from java import jint, static_proxy
 
 import fanficfare.cli
+
+with open(os.path.dirname(fanficfare.__file__) + '/defaults.ini', 'r') as f:
+    default_ini = f.read()
 originalGetAdapter = fanficfare.cli.adapters.getAdapter
 handler = None
 
@@ -43,8 +46,6 @@ def my_get_adapter(config, url, anyurl=False):
 def start(my_handler, url):
     global handler
     handler = my_handler
-    with open(os.path.dirname(fanficfare.__file__) + '/defaults.ini', 'r') as f:
-        default_ini = f.read()
     fanficfare.cli.adapters.getAdapter = my_get_adapter
     print("Now starting Story with url '%s'." % url)
     fanficfare.cli.main([
