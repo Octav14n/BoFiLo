@@ -30,13 +30,8 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
-            val sharedPreference = PreferenceManager.getDefaultSharedPreferences(context!!.applicationContext)
-            val defaultDirectory = sharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, null)
-            defaultDirectoryPreference.summary = if (defaultDirectory == null) {
-                getString(R.string.choose_directory_summary_default)
-            } else {
-                getString(R.string.choose_directory_summary).format(defaultDirectory)
-            }
+            setSummary()
+
             defaultDirectoryPreference.setOnPreferenceClickListener {
 
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
@@ -48,6 +43,15 @@ class SettingsActivity : AppCompatActivity() {
                 startActivityForResult(intent, PICK_DEFAULT_DIRECTORY)
 
                 true
+            }
+        }
+        private fun setSummary()  {
+            val sharedPreference = PreferenceManager.getDefaultSharedPreferences(context!!.applicationContext)
+            val defaultDirectory = sharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, null)
+            defaultDirectoryPreference.summary = if (defaultDirectory == null) {
+                getString(R.string.choose_directory_summary_default)
+            } else {
+                getString(R.string.choose_directory_summary).format(defaultDirectory)
             }
         }
 
@@ -67,6 +71,8 @@ class SettingsActivity : AppCompatActivity() {
                         preference.edit(true) {
                             putString(Constants.PREF_DEFAULT_DIRECTORY, directory.uri.toString())
                         }
+
+                        setSummary()
                     }
                 }
             }
