@@ -4,69 +4,63 @@ import android.app.IntentService
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
-import java.lang.IllegalStateException
+import eu.schnuff.bofilo.persistence.StoryListItem
+import eu.schnuff.bofilo.persistence.StoryListViewModel
 
 class StoryDownloadService : IntentService("StoryDownloadService") {
     private val py = Python.getInstance()
     private val helper = py.getModule("helper")
-    private var url: String? = null
-    private var id: Int = -1
+    private var viewModel: StoryListViewModel? = null
+    private var item: StoryListItem? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        viewModel = StoryListViewModel(application)
+    }
 
     override fun onHandleIntent(intent: Intent) {
         val url = intent.getStringExtra(PARAM_URL)!!
-        val dir = intent.getStringExtra(PARAM_IN_DIR) ?: cacheDir.absolutePath
+        val dir = intent.getStringExtra(PARAM_DIR) ?: cacheDir.absolutePath
+
+        item = viewModel!!.get(url)
+        ActiveItem = item
+        viewModel!!.start(item!!)
+
         py.getModule("os").callAttr("chdir", dir)
 
         try {
             helper.callAttr("start", this, url)
+            this.finished()
         } catch (e: PyException) {
-            Toast.makeText(applicationContext, "Error downloading $url: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
-            send(ACTION_ERROR) {
-                putExtra(PARAM_OUT_TEXT, e.localizedMessage)
-            }
+            if (item != null)
+                viewModel!!.setTitle(item!!, e.localizedMessage)
+            item = null
         }
-        this.finished()
-    }
-
-    private fun send(action: String, apply: Intent.() -> Unit = {}) {
-        if (id < 0) { throw IllegalStateException("Download ID is not defined.") }
-        Log.d("intent", "perform $action broadcast.")
-        LocalBroadcastManager.getInstance(this).sendBroadcast(Intent(action).apply {
-            putExtra(PARAM_URL, url)
-            putExtra(PARAM_ID, )
-        }.apply(apply))
     }
 
     fun start(url: String) {
-        this.url = url
-        send(ACTION_START)
+        Log.d("download", "start(${this.item} --> $url)")
+        viewModel!!.setUrl(item!!, url)
     }
-
-    fun chapters(now: Int, max: Int) = send(ACTION_PROGRESS) {
-        putExtra(PARAM_OUT_PROGRESS, now)
-        putExtra(PARAM_OUT_PROGRESS_MAX, max)
+    fun chapters(now: Int, max: Int) {
+        Log.d("download", "chapters($item, $now, $max)")
+        viewModel!!.setProgress(item!!, now, max)
     }
-    fun title(title: String) = send(ACTION_TITLE) {
-        putExtra(PARAM_OUT_TEXT, title)
+    fun title(title: String) = viewModel!!.setTitle(item!!, title)
+    private fun finished() {
+        viewModel!!.setFinished(item!!)
+        item = null
     }
-    fun finished() = send(ACTION_FINISHED)
 
     companion object {
         const val PARAM_ID = "id"
         const val PARAM_URL = "url"
-        const val PARAM_IN_DIR = "dir"
-        const val PARAM_OUT_PROGRESS = "progress"
-        const val PARAM_OUT_PROGRESS_MAX = "progress_max"
-        const val PARAM_OUT_TEXT = "text"
-        private const val ACTION_BASE = "eu.schnuff.bofilo"
-        const val ACTION_START = "$ACTION_BASE.action_start"
-        const val ACTION_PROGRESS = "$ACTION_BASE.action_progress"
-        const val ACTION_TITLE = "$ACTION_BASE.action_title"
-        const val ACTION_ERROR = "$ACTION_BASE.action_error"
-        const val ACTION_FINISHED = "$ACTION_BASE.action_finished"
+        const val PARAM_DIR = "dir"
+        var ActiveItem: StoryListItem? = null
+        private set
     }
 }
