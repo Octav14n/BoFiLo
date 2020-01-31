@@ -19,4 +19,6 @@
     <string name="preference_debug_caching_title">Caching between restarts</string>
     <string name="preference_debug_caching_summary_on" tools:ignore="TypographyDashes">Setting "--save-cache" is enabled.</string>
     <string name="preference_debug_caching_summary_off">Caching between restarts is disabled</string>
+    <string name="preference_debug_personalini_title">Supply FanFicFare personal.ini</string>
+    <string name="preference_debug_personalini_summary">Caution: This may break the app.\nIt must be a functioning personal.ini file.</string>
 </resources>

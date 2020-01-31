@@ -23,6 +23,7 @@ android {
         python {
             pip {
                 install "FanFicFare"
+                install "Pillow"
             }
         }
     }

@@ -37,6 +37,11 @@
                 android:title="@string/preference_debug_caching_title"
                 android:summaryOn="@string/preference_debug_caching_summary_on"
                 android:summaryOff="@string/preference_debug_caching_summary_off"/>
+
+        <Preference
+                android:key="pref_dev_personalini"
+                android:title="@string/preference_debug_personalini_title"
+                android:summary="@string/preference_debug_personalini_summary"/>
     </PreferenceCategory>
 
 </PreferenceScreen>

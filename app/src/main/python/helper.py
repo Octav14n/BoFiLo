@@ -5,6 +5,7 @@ import fanficfare.cli
 
 with open(os.path.dirname(fanficfare.__file__) + '/defaults.ini', 'r') as f:
     default_ini = f.read()
+personal_ini = None
 originalGetAdapter = fanficfare.cli.adapters.getAdapter
 handler = None
 
@@ -40,12 +41,47 @@ class MyStory(object):
         return getattr(self.story, attr)
 
 
+class MyAdapter(object):
+    def __init__(self, adapter):
+        self.adapter = adapter
+
+    def getStoryMetadataOnly(self, get_cover=True):
+        for _ in range(0, 2 if handler else 1):
+            try:
+                return self.adapter.getStoryMetadataOnly(get_cover)
+            except fanficfare.cli.exceptions.FailedToLogin as f:
+                if not handler:
+                    raise f
+                if f.passwdonly:
+                    print('Story requires a password.')
+                    [self.adapter.password, _] = handler.getLogin(True)
+                else:
+                    print('Login Failed, Need Username/Password.')
+                    [self.adapter.password, self.adapter.username] = handler.getLogin(False)
+            except fanficfare.cli.exceptions.AdultCheckRequired as e:
+                if handler and handler.getIsAdult():
+                    self.adapter.is_adult = True
+                else:
+                    raise e
+
+    def __getattr__(self, attr):
+        # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
+        # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
+        return getattr(self.adapter, attr)
+
+
 def my_get_adapter(config, url, anyurl=False):
     adapter = originalGetAdapter(config, url, anyurl)
     if handler:
         handler.start(adapter.url)
     adapter.story = MyStory(adapter.story)
-    return adapter
+    return MyAdapter(adapter)
+
+
+def read_personal_ini(path):
+    global personal_ini
+    with open(path, "r") as f:
+        personal_ini = f.read()
 
 
 def start(my_handler, url, save_cache=False):
@@ -65,8 +101,8 @@ def start(my_handler, url, save_cache=False):
     ]
     if save_cache:
         options.insert(0, '--save-cache')
-    fanficfare.cli.main(options, passed_defaultsini=default_ini)
+    fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
 
 
 if __name__ == "__main__":
-    start('https://www.fanfiction.net/s/12979639/1/Jane-Arc-s-Yuri-Harem')
+    start(None, 'https://www.fanfiction.net/s/2318355/1/Make-A-Wish', True)

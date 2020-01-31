@@ -41,6 +41,10 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         val saveCache = defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
         try {
+            val personalini = File(filesDir, "personal.ini")
+            if (personalini.exists()) {
+                helper.callAttr("read_personal_ini", personalini.absolutePath)
+            }
             helper.callAttr("start", this, url, saveCache)
             ActiveItem?.let {
                 if (it.max != null && it.progress != null && it.max!! > 0 && it.progress!! >= it.max!!) {
@@ -85,7 +89,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             val dir = getDir()
             originalFile = dir.findFile(name)?.uri
             originalFile?.let {
-                copyFile(it, cacheFile!!)
+                contentResolver.copyFile(it, cacheFile!!)
             }
         }
     }
@@ -93,7 +97,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private fun finished() {
         // copy data back to original file
         cacheFile?.let {
-            copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
+            contentResolver.copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
             it.toFile().delete()
         }
 
@@ -105,18 +109,6 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
 
     private fun getDir() = DocumentFile.fromTreeUri(applicationContext,
             defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
-
-    private fun copyFile(src: Uri, dst: Uri) {
-        val input = contentResolver.openInputStream(src)!!
-        val output = contentResolver.openOutputStream(dst)!!
-        val buffer = ByteArray(1024)
-        var len: Int
-        while (input.read(buffer).also{ len = it } > 0) {
-            output.write(buffer, 0, len)
-        }
-        input.close()
-        output.close()
-    }
 
     companion object {
         const val PARAM_ID = "id"
