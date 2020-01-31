@@ -42,7 +42,11 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
 
         try {
             helper.callAttr("start", this, url, saveCache)
-            this.finished()
+            ActiveItem?.let {
+                if (it.max != null && it.progress != null && it.max!! > 0 && it.progress!! >= it.max!!) {
+                    this.finished()
+                }
+            }
         } catch (e: PyException) {
             Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
@@ -80,11 +84,10 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     fun title(title: String) = viewModel!!.setTitle(ActiveItem!!, title)
     private fun finished() {
         // copy data back to original file
-        if (originalFile == null) {
-            originalFile = getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri
+        cacheFile?.let {
+            copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
+            it.toFile().delete()
         }
-        copyFile(cacheFile!!, originalFile!!)
-        cacheFile!!.toFile().delete()
 
         // "inform" user about finish
         viewModel!!.setFinished(ActiveItem!!)
