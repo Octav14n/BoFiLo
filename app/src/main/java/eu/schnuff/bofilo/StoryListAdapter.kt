@@ -48,7 +48,7 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
             holder.view.progress.visibility = View.VISIBLE
             if (item.url == StoryDownloadService.ActiveItem?.url) {
                 holder.view.progress_text.visibility = View.VISIBLE
-                holder.view.progress.isIndeterminate = false
+                holder.view.progress.isIndeterminate = (p < 1)
                 holder.view.progress_text.text = "$p/${m ?: "∞"}"
                 holder.view.progress.progress = p
                 holder.view.progress.max = m ?: (p + 1)
