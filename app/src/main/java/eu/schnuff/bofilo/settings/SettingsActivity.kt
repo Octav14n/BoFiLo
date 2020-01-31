@@ -1,13 +1,14 @@
 package eu.schnuff.bofilo.settings
 
-import android.R.attr
 import android.content.ContentResolver
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.documentfile.provider.DocumentFile
-import androidx.preference.*
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.R
 
@@ -25,7 +26,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
-        val defaultDirectoryPreference: Preference
+        private val defaultDirectoryPreference: Preference
             get() = findPreference<Preference>(Constants.PREF_DEFAULT_DIRECTORY)!!
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -49,9 +50,9 @@ class SettingsActivity : AppCompatActivity() {
             val sharedPreference = PreferenceManager.getDefaultSharedPreferences(context!!.applicationContext)
             val defaultDirectory = sharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, null)
             defaultDirectoryPreference.summary = if (defaultDirectory == null) {
-                getString(R.string.choose_directory_summary_default)
+                getString(R.string.preference_general_choose_directory_summary_default)
             } else {
-                getString(R.string.choose_directory_summary).format(defaultDirectory)
+                getString(R.string.preference_general_choose_directory_summary).format(defaultDirectory)
             }
         }
 

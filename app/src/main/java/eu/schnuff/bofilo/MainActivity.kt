@@ -2,18 +2,18 @@ package eu.schnuff.bofilo
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import eu.schnuff.bofilo.settings.SettingsActivity
-
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 class MainActivity : AppCompatActivity() {
     private val adapter = StoryListAdapter()

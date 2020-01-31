@@ -63,6 +63,14 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         Log.d("download", "start($ActiveItem --> $url)")
         viewModel!!.setUrl(ActiveItem!!, url)
     }
+    fun getLogin(passwordOnly: Boolean = false): Array<String> {
+        val password = "secret"
+        val username = "secret"
+        return arrayOf(password, username)
+    }
+    fun getIsAdult(): Boolean {
+        return PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_IS_ADULT, false)
+    }
     fun chapters(now: Int, max: Int) {
         Log.d("download", "chapters($ActiveItem, $now, $max)")
         viewModel!!.setProgress(ActiveItem!!, now, max)
