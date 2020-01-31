@@ -1,8 +1,10 @@
 package eu.schnuff.bofilo
 
 import android.app.IntentService
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.PowerManager
 import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.Toast
@@ -19,6 +21,7 @@ import java.io.File
 class StoryDownloadService : IntentService("StoryDownloadService") {
     private val py = Python.getInstance()
     private val helper = py.getModule("helper")
+    private var wakeLock: PowerManager.WakeLock? = null
     private var viewModel: StoryListViewModel? = null
     private var originalFile: Uri? = null
     private var cacheFile: Uri? = null
@@ -27,6 +30,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     override fun onCreate() {
         super.onCreate()
         viewModel = StoryListViewModel(application)
+        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BoFiLo::DownloadService").apply { setReferenceCounted(false) }
         py.getModule("os").callAttr("chdir", cacheDir.absolutePath)
     }
 
@@ -34,9 +38,11 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         val url = intent.getStringExtra(PARAM_URL)!!
 
         ActiveItem = viewModel!!.get(url)
-        if (!viewModel!!.has(url)) {
-            viewModel!!.add(url)
+        if (ActiveItem == null) {
+            return
+            //viewModel!!.add(url)
         }
+        wakeLock!!.acquire()
         viewModel!!.start(ActiveItem!!)
         val saveCache = defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
@@ -60,7 +66,14 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         } finally {
             ActiveItem = null
             cacheFile = null
+            wakeLock!!.release()
+            wakeLock!!.acquire(250)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        wakeLock?.release()
     }
 
     fun start(url: String) {

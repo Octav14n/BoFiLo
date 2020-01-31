@@ -2,8 +2,6 @@ package eu.schnuff.bofilo
 
 import android.content.ContentResolver
 import android.net.Uri
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 
 object Constants {
     const val PREF_PERSONALINI = "pref_dev_personalini"
@@ -15,13 +13,13 @@ object Constants {
 }
 
 fun ContentResolver.copyFile(src: Uri, dst: Uri) {
-    val input = BufferedInputStream(this.openInputStream(src)!!)
-    val output = BufferedOutputStream(this.openOutputStream(dst)!!)
-    val buffer = ByteArray(32 * 1024)
-    var len: Int
-    while (input.read(buffer).also{ len = it } > 0) {
-        output.write(buffer, 0, len)
-    }
+    //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+    //    DocumentsContract.copyDocument(this, src, dst) // cant copy to cache/data directory -.-
+    //} else {
+    val input = this.openInputStream(src)!!.buffered()
+    val output = this.openOutputStream(dst)!!.buffered()
+    input.copyTo(output)
     input.close()
     output.close()
+    //}
 }

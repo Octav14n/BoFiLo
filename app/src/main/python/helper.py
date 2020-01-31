@@ -78,6 +78,10 @@ def my_get_adapter(config, url, anyurl=False):
     return MyAdapter(adapter)
 
 
+def my_call(*popenargs, timeout=None, **kwargs):
+    pass
+
+
 def read_personal_ini(path):
     global personal_ini
     with open(path, "r") as f:
@@ -88,6 +92,7 @@ def start(my_handler, url, save_cache=False):
     global handler
     handler = my_handler
     fanficfare.cli.adapters.getAdapter = my_get_adapter
+    fanficfare.cli.call = my_call
     print("Now starting Story with url '%s'." % url)
     options = [
         # '--meta-only',

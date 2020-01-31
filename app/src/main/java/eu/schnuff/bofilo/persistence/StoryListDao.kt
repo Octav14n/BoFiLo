@@ -20,6 +20,9 @@ interface StoryListDao {
     @Query("DELETE FROM story_list_item WHERE url = :url")
     suspend fun delete(url: String)
 
+    @Query("DELETE FROM story_list_item")
+    suspend fun deleteAll()
+
     @Update
     suspend fun update(item: StoryListItem)
 }

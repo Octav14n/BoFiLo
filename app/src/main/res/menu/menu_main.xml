@@ -6,4 +6,5 @@
           android:title="@string/action_settings"
           android:orderInCategory="100"
           app:showAsAction="never"/>
+    <item android:title="@string/action_reset" android:id="@+id/action_reset" android:icon="@drawable/ic_action_reset"/>
 </menu>

@@ -113,4 +113,7 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
     private fun remove(url: String) = viewModelScope.launch {
         dao.delete(url)
     }
+    fun removeAll() = viewModelScope.launch {
+        dao.deleteAll()
+    }
 }

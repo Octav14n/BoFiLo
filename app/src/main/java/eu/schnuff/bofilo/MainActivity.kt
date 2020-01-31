@@ -109,6 +109,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
+            R.id.action_reset -> {
+                storyListViewModel!!.removeAll()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
