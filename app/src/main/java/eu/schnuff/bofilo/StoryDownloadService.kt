@@ -53,9 +53,9 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             }
             helper.callAttr("start", this, url, saveCache)
             ActiveItem?.let {
-                if (it.max != null && it.progress != null && it.max!! > 0 && it.progress!! >= it.max!!) {
-                    this.finished()
-                }
+                //if (it.max != null && it.progress != null && it.max!! > 0 && it.progress!! >= it.max!!) {
+                this.finished()
+                //}
             }
         } catch (e: PyException) {
             Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
@@ -110,7 +110,9 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private fun finished() {
         // copy data back to original file
         cacheFile?.let {
-            contentResolver.copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
+            if (ActiveItem!!.max != null && ActiveItem!!.progress != null && ActiveItem!!.max!! > 0 && ActiveItem!!.progress!! >= ActiveItem!!.max!!) {
+                contentResolver.copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
+            }
             it.toFile().delete()
         }
 
