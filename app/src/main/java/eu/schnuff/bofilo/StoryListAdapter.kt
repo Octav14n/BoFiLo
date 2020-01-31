@@ -14,7 +14,6 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
     private var myDataset = emptyArray<StoryListItem>()
 
     fun setAll(items: Array<StoryListItem>) {
-        if (items == null)
         myDataset = items
         notifyDataSetChanged()
     }
