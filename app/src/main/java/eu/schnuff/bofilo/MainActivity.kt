@@ -16,7 +16,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
 class MainActivity : AppCompatActivity() {
-    private val adapter = StoryListAdapter()
+    private var adapter: StoryListAdapter? = null
     private var storyListViewModel: StoryListViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         // adapter.init(application)
         storyListViewModel = StoryListViewModel(application)
+        adapter = StoryListAdapter(storyListViewModel!!)
         val storyListItems = storyListViewModel!!.allItems
         var initializedOldDownloads = false
         storyListItems.observe(this, Observer {
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     initializedOldDownloads = true
                 }
-                adapter.setAll(finished.toTypedArray())
+                adapter!!.setAll(finished.toTypedArray())
             }
         })
         story_list.adapter = adapter

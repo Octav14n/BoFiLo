@@ -1,17 +1,20 @@
 package eu.schnuff.bofilo
 
-import android.content.res.Resources
+import android.app.Application
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import eu.schnuff.bofilo.persistence.StoryListItem
+import eu.schnuff.bofilo.persistence.StoryListViewModel
 import kotlinx.android.synthetic.main.story_list_detail.view.*
+import kotlin.coroutines.coroutineContext
 
-class StoryListAdapter() : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>() {
+class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>() {
     private var myDataset = emptyArray<StoryListItem>()
 
     fun setAll(items: Array<StoryListItem>) {
+        if (items == null)
         myDataset = items
         notifyDataSetChanged()
     }
@@ -57,6 +60,10 @@ class StoryListAdapter() : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>()
         } else {
             holder.view.progress.visibility = View.GONE
             holder.view.progress_text.visibility = View.GONE
+        }
+        holder.view.setOnLongClickListener {
+            viewModel.remove(item)
+            true
         }
     }
 

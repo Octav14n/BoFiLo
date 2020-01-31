@@ -107,7 +107,7 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         item.apply(apply)
         dao.update(item)
     }
-    private fun remove(item: StoryListItem) = viewModelScope.launch {
+    fun remove(item: StoryListItem) = viewModelScope.launch {
         dao.delete(item)
     }
     private fun remove(url: String) = viewModelScope.launch {
