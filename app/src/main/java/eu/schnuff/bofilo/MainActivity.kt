@@ -59,21 +59,20 @@ class MainActivity : AppCompatActivity() {
         fab.setOnClickListener { view ->
             // Test urls.
             for (url in listOf(
-//                // author: Rorschach's Blot (short)
-//                "https://www.fanfiction.net/s/2100544/1/Past-Lives",
-//                "https://www.fanfiction.net/s/3248583/1/Ground-Hog-Day",
-//                "https://www.fanfiction.net/s/3635811/1/Hermione-the-Harem-Girl",
-//                // author: Rorschach's Blot (longer)
-//                "https://www.fanfiction.net/s/2318355/1/Make-A-Wish",
-//                "https://www.fanfiction.net/s/3032621/1/The-Hunt-For-Harry-Potter",
-//                "https://www.fanfiction.net/s/3695087/1/Larceny-Lechery-and-Luna-Lovegood",
-//                // author: dogbertcarroll
-//                "https://www.tthfanfic.org/Story-14005/dogbertcarroll+Walking+in+the+shadows.htm",
-//                "https://www.tthfanfic.org/Story-33037/dogbertcarroll+Wood+it+Work.htm",
-//                "https://www.tthfanfic.org/Story-21322/dogbertcarroll+I+wouldn+t+exactly+call+that+sitting.htm",
-//                // site: SpaceBattles.com
-//                "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/"
-                "https://forum.questionablequesting.com/threads/multiversal-mayhem-r34-economy-marvel-mcu.11304/"
+                // author: Rorschach's Blot (short)
+                "https://www.fanfiction.net/s/2100544/1/Past-Lives",
+                "https://www.fanfiction.net/s/3248583/1/Ground-Hog-Day",
+                "https://www.fanfiction.net/s/3635811/1/Hermione-the-Harem-Girl",
+                // author: Rorschach's Blot (longer)
+                "https://www.fanfiction.net/s/2318355/1/Make-A-Wish",
+                "https://www.fanfiction.net/s/3032621/1/The-Hunt-For-Harry-Potter",
+                "https://www.fanfiction.net/s/3695087/1/Larceny-Lechery-and-Luna-Lovegood",
+                // author: dogbertcarroll
+                "https://www.tthfanfic.org/Story-14005/dogbertcarroll+Walking+in+the+shadows.htm",
+                "https://www.tthfanfic.org/Story-33037/dogbertcarroll+Wood+it+Work.htm",
+                "https://www.tthfanfic.org/Story-21322/dogbertcarroll+I+wouldn+t+exactly+call+that+sitting.htm",
+                // site: SpaceBattles.com
+                "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/"
             ).reversed()) {
                 scheduleDownload(url)
             }
