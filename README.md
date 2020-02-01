@@ -1,10 +1,12 @@
 ![][logo]
-# BoFiLo
+# BoFiLo (Book Fiction Loader)
 A Android frontend for https://github.com/JimmXinu/FanFicFare
+
+Download apk from [releases](https://github.com/Octav14n/BoFiLo/releases)
 
 ## How to use this App
 1. Go to "Settings" and choose where to store your Epub files
-2. Browse to your favorite Story and use the "Share" option to open the story url with BoFiLo.
+2. Use your web-browser to find a Story you want to download and use the "Share" option to open the story url with BoFiLo.
 
 ### Usage hints:
 - For "Default folder" use some folder in "internal storage" or use "downloads" for best speed
