@@ -69,8 +69,10 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             cacheFile = null
             wakeLock!!.release()
             wakeLock!!.acquire(250)
-            outputBuilder.clear()
-            viewModel?.setConsoleOutput(outputBuilder.toString())
+            outputBuilder.append(getString(R.string.console_finish_message).format(url))
+            outputBuilder.append("\n\n\n")
+            // outputBuilder.clear()
+            // viewModel?.setConsoleOutput("")
         }
     }
 
@@ -89,6 +91,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         viewModel!!.setUrl(ActiveItem!!, url)
     }
     fun getLogin(passwordOnly: Boolean = false): Array<String> {
+        output("\n!!! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
         val password = "secret"
         val username = "secret"
         return arrayOf(password, username)
@@ -106,13 +109,15 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         fileName = name
         cacheFile = File(cacheDir, name).toUri()
         if (originalFile == null) {
-            Log.d(TAG, "\tnow copying file to cache.")
-
-            wakeLock!!.acquire(60000)
-            val dir = getDir()
-            originalFile = dir.findFile(name)?.uri
-            originalFile?.let {
-                contentResolver.copyFile(it, cacheFile!!)
+            if (isDir) {
+                val dir = getDir()
+                originalFile = dir.findFile(name)?.uri
+                originalFile?.let {
+                    Log.d(TAG, "\tnow copying file to cache.")
+                    output("Copy extern epub file to cache.\n")
+                    wakeLock!!.acquire(60000)
+                    contentResolver.copyFile(it, cacheFile!!)
+                } ?: output("File not found in folder.\n")
             }
         }
     }
@@ -120,18 +125,25 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private fun finished() {
         // copy data back to original file
         cacheFile?.let {
-            if (ActiveItem!!.max != null && ActiveItem!!.progress != null && ActiveItem!!.max!! > 0 && ActiveItem!!.progress!! >= ActiveItem!!.max!!) {
-                contentResolver.copyFile(it, originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri)
+            if (isDir) {
+                if (ActiveItem!!.max != null && ActiveItem!!.progress != null && ActiveItem!!.max!! > 0 && ActiveItem!!.progress!! >= ActiveItem!!.max!!) {
+                    contentResolver.copyFile(
+                        it,
+                        originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri
+                    )
+                }
+                it.toFile().delete()
             }
-            it.toFile().delete()
         }
 
         // "inform" user about finish
         viewModel!!.setFinished(ActiveItem!!)
     }
     private val defaultSharedPreference
-    get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
+    private val isDir
+        get() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
     private fun getDir() = DocumentFile.fromTreeUri(applicationContext,
             defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
 
