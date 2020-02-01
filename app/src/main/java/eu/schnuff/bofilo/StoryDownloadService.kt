@@ -1,13 +1,15 @@
 package eu.schnuff.bofilo
 
-import android.app.IntentService
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -16,6 +18,7 @@ import com.chaquo.python.Python
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
+import eu.schnuff.bofilo.copyFile
 
 
 class StoryDownloadService : IntentService("StoryDownloadService") {
@@ -44,6 +47,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             //viewModel!!.add(url)
         }
         wakeLock!!.acquire(20000)
+        startForeground(NOTIFICATION_ID, createNotification())
         viewModel!!.start(ActiveItem!!)
         val saveCache = defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
@@ -71,6 +75,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             wakeLock!!.acquire(250)
             outputBuilder.append(getString(R.string.console_finish_message).format(url))
             outputBuilder.append("\n\n\n")
+            stopForeground(true)
             // outputBuilder.clear()
             // viewModel?.setConsoleOutput("")
         }
@@ -99,10 +104,14 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     fun getIsAdult(): Boolean {
         return PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_IS_ADULT, false)
     }
-    fun chapters(now: Int, max: Int) {
-        Log.d(TAG, "chapters($ActiveItem, $now, $max)")
-        viewModel!!.setProgress(ActiveItem!!, now, max)
+    fun chapters(now: Int?, max: Int?) {
         wakeLock!!.acquire(20000)
+        Log.d(TAG, "chapters($ActiveItem, $now, $max)")
+        val prevProgress = ActiveItem!!.progress ?: 0
+        val prevMax = ActiveItem!!.max ?: 0
+        viewModel!!.setProgress(ActiveItem!!, now ?: 0, max)
+        if (now != null && max != null && prevProgress <= now && prevMax <= max)
+            startForeground(NOTIFICATION_ID, createNotification())
     }
     fun filename(name: String) {
         Log.d(TAG, "filename($name)")
@@ -121,7 +130,10 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             }
         }
     }
-    fun title(title: String) = viewModel!!.setTitle(ActiveItem!!, title)
+    fun title(title: String) {
+        viewModel!!.setTitle(ActiveItem!!, title)
+        startForeground(NOTIFICATION_ID, createNotification())
+    }
     private fun finished() {
         // copy data back to original file
         cacheFile?.let {
@@ -147,10 +159,50 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private fun getDir() = DocumentFile.fromTreeUri(applicationContext,
             defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
 
+    private fun createNotification(): Notification {
+        createNotificationChannel()
+        // Create an explicit intent for an Activity in your app
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification_download)
+            .setContentTitle(getString(R.string.foreground_name).format(ActiveItem?.title ?: ActiveItem?.url ?: "..."))
+            .setContentText(getString(R.string.foreground_text).format(ActiveItem?.progress ?: 0, ActiveItem?.max ?: getString(R.string.download_default_max)))
+            .setProgress(ActiveItem?.max ?: 1, ActiveItem?.progress ?: 0, (ActiveItem?.progress == null || ActiveItem?.max == 0))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            // Set the intent that will fire when the user taps the notification
+            .setContentIntent(pendingIntent)
+
+        return builder.build()
+    }
+
+    private fun createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = getString(R.string.channel_name)
+            val descriptionText = getString(R.string.channel_description)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+
     companion object {
         const val PARAM_ID = "id"
         const val PARAM_URL = "url"
         const val PARAM_DIR = "dir"
+        const val CHANNEL_ID = "StoryDownloadProgress"
+        const val NOTIFICATION_ID = 3001
         var ActiveItem: StoryListItem? = null
         private set
         const val TAG = "download"
