@@ -22,4 +22,6 @@
     <string name="preference_debug_caching_summary_off">Caching between restarts is disabled</string>
     <string name="preference_debug_personalini_title">Supply FanFicFare personal.ini</string>
     <string name="preference_debug_personalini_summary">Caution: This may break the app.\nIt must be a functioning personal.ini file.</string>
+    <string name="preference_debug_console_show_title">Show script output</string>
+    <string name="preference_debug_console_show_summary">Show the console output of FanFicFare</string>
 </resources>

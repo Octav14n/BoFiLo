@@ -26,6 +26,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private var originalFile: Uri? = null
     private var cacheFile: Uri? = null
     private var fileName: String = ""
+    private val outputBuilder = StringBuilder()
 
     override fun onCreate() {
         super.onCreate()
@@ -42,7 +43,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             return
             //viewModel!!.add(url)
         }
-        wakeLock!!.acquire()
+        wakeLock!!.acquire(20000)
         viewModel!!.start(ActiveItem!!)
         val saveCache = defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
@@ -68,6 +69,8 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             cacheFile = null
             wakeLock!!.release()
             wakeLock!!.acquire(250)
+            outputBuilder.clear()
+            viewModel?.setConsoleOutput(outputBuilder.toString())
         }
     }
 
@@ -76,8 +79,13 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         wakeLock?.release()
     }
 
+    fun output(output: String) {
+        outputBuilder.append(output)
+        Log.d(TAG, "console: $output")
+        viewModel?.setConsoleOutput(outputBuilder.toString())
+    }
     fun start(url: String) {
-        Log.d("download", "start($ActiveItem --> $url)")
+        Log.d(TAG, "start($ActiveItem --> $url)")
         viewModel!!.setUrl(ActiveItem!!, url)
     }
     fun getLogin(passwordOnly: Boolean = false): Array<String> {
@@ -89,16 +97,18 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         return PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_IS_ADULT, false)
     }
     fun chapters(now: Int, max: Int) {
-        Log.d("download", "chapters($ActiveItem, $now, $max)")
+        Log.d(TAG, "chapters($ActiveItem, $now, $max)")
         viewModel!!.setProgress(ActiveItem!!, now, max)
+        wakeLock!!.acquire(20000)
     }
     fun filename(name: String) {
-        Log.d("download", "filename($name)")
+        Log.d(TAG, "filename($name)")
         fileName = name
         cacheFile = File(cacheDir, name).toUri()
         if (originalFile == null) {
-            Log.d("download", "\tnow copying file to cache.")
+            Log.d(TAG, "\tnow copying file to cache.")
 
+            wakeLock!!.acquire(60000)
             val dir = getDir()
             originalFile = dir.findFile(name)?.uri
             originalFile?.let {
@@ -131,5 +141,6 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         const val PARAM_DIR = "dir"
         var ActiveItem: StoryListItem? = null
         private set
+        const val TAG = "download"
     }
 }

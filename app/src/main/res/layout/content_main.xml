@@ -1,12 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:showIn="@layout/activity_main"
-        tools:context=".MainActivity" android:id="@+id/story_list"
-        android:scrollbars="vertical" tools:listitem="@layout/story_list_detail"/>
+        android:layout_height="match_parent">
+        <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:showIn="@layout/activity_main"
+                tools:context=".MainActivity" android:id="@+id/story_list"
+                android:scrollbars="vertical" tools:listitem="@layout/story_list_detail" android:layout_weight="2"
+                android:layout_height="0dp">
+        </androidx.recyclerview.widget.RecyclerView>
+        <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider"
+                android:layout_weight="0"/>
+        <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:id="@+id/consoleOutputScroll" android:layout_height="0dp" android:visibility="gone"
+                tools:visibility="visible">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                              android:orientation="vertical" android:layout_margin="@dimen/fab_margin">
+                        <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" android:id="@+id/consoleOutput"
+                                tools:text="Galleon ye scuppers spirits splice the main brace sloop warp brigantine ho Buccaneer broadside schooner spyglass cackle fruit bring a spring upon her cable run a rig gibbet me league bucko. Fire ship spanker Yellow Jack carouser gangplank provost chase heave to trysail aft mizzen coffer Blimey parrel wherry come about jib yawl hornswaggle tackle.  Gangway sloop Barbary Coast keelhaul bounty bilge rat list barkadeer wench marooned run a rig pressgang bilge water six pounders jib spyglass blow the man down pink come about scuttle. Poop deck fathom American Main Privateer yo-ho-ho hornswaggle Pirate Round chase guns code of conduct spirits knave main sheet lugsail hands run a rig man-of-war long boat lugger fire in the hole grapple.  Warp careen long clothes fire in the hole loot take a caulk hail-shot lateen sail brigantine Pirate Round Privateer clap of thunder sheet gaff boom crimp cackle fruit carouser landlubber or just lubber swing the lead. Letter of Marque nipperkin come about scourge of the seven seas rigging grog booty league six pounders bounty chandler spirits red ensign tackle wherry skysail sheet quarter hang the jib furl.  Schooner doubloon hempen halter chandler parley overhaul Admiral of the Black parrel no prey, no pay landlubber or just lubber Chain Shot Pirate Round Buccaneer nipperkin gangway Pieces of Eight pink wench swab fire in the hole. Schooner hempen halter smartly tender hardtack spirits grog blossom Gold Road pressgang bounty parrel pinnace lanyard swing the lead scallywag lugger trysail reef sails grog Davy Jones' Locker.  Scuttle coxswain crimp Cat o'nine tails Pieces of Eight hail-shot pressgang measured fer yer chains sloop bring a spring upon her cable Chain Shot haul wind hornswaggle wherry spirits lookout rutters walk the plank aft scourge of the seven seas. Hardtack quarter ballast weigh anchor fathom run a rig schooner blow the man down starboard transom gunwalls wherry Davy Jones' Locker yardarm bring a spring upon her cable hogshead Barbary Coast black jack chase guns topmast.  Spyglass fore gally dance the hempen jig Spanish Main loot clap of thunder Admiral of the Black Barbary Coast jack wherry nipper Arr belay hang the jib cog jib lugger hulk blow the man down. Gangplank Jolly Roger crimp red ensign jack squiffy provost ho measured fer yer chains keelhaul deadlights haul wind fore code of conduct fire in the hole square-rigged booty come about trysail Gold Road.  Log ahoy dead men tell no tales gaff killick splice the main brace strike colors matey take a caulk wench salmagundi rutters line lad mizzenmast crow's nest marooned squiffy heave down hulk. Bilge interloper barkadeer clipper boatswain jib nipper gibbet skysail sheet blow the man down keel bowsprit Blimey lugger Letter of Marque take a caulk Jack Tar driver cutlass.  Nipper line salmagundi gun topmast Sink me snow Blimey grog blossom ho Letter of Marque holystone gangway gabion execution dock yawl grog spanker crow's nest jolly boat. Marooned mizzen heave to black jack weigh anchor crack Jennys tea cup blow the man down measured fer yer chains Plate Fleet clipper snow spyglass Nelsons folly parrel tender lugger Davy Jones' Locker bring a spring upon her cable run a shot across the bow spanker.  Careen yo-ho-ho barkadeer grog blossom jolly boat square-rigged prow yard execution dock Admiral of the Black keel gangplank weigh anchor gally coffer crimp chase flogging bucko ballast. Rope's end gibbet Brethren of the Coast ballast clap of thunder trysail flogging rum lookout dance the hempen jig lad fluke ho marooned poop deck bilge water quarterdeck provost Cat o'nine tails clipper.  Main sheet black jack doubloon spike ho jury mast pressgang wherry Cat o'nine tails swing the lead yardarm take a caulk belay run a shot across the bow jib pinnace matey maroon gibbet furl. Jolly Roger Nelsons folly Pirate Round chase guns rigging Pieces of Eight case shot swab Brethren of the Coast crack Jennys tea cup scuttle grog blossom quarter hearties squiffy furl dance the hempen jig rutters avast warp.  Landlubber or just lubber lass line doubloon swing the lead haul wind league fire ship gangplank deadlights fathom pillage draught piracy topsail Barbary Coast hail-shot execution dock cackle fruit provost. Coxswain flogging lanyard tender plunder rutters furl Blimey scuppers grog heave to belaying pin swab draft chase schooner chandler Pirate Round mizzenmast spanker.  Matey warp ahoy reef chase guns log mizzenmast Admiral of the Black code of conduct hardtack rum Letter of Marque dance the hempen jig salmagundi squiffy heave down chase lad loaded to the gunwalls Spanish Main. Buccaneer gunwalls ho American Main sheet crow's nest yard chantey grapple splice the main brace squiffy bilge knave hearties measured fer yer chains gabion long clothes stern topgallant Davy Jones' Locker. "/>
+                </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+</LinearLayout>

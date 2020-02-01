@@ -2,6 +2,8 @@ package eu.schnuff.bofilo.persistence
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import java.util.*
@@ -9,6 +11,12 @@ import java.util.*
 class StoryListViewModel(application: Application) : AndroidViewModel(application) {
     private val dao = StoryListDatabase.getDatabase(application).storyListDao()
     val allItems = dao.getAll()
+    val consoleOutput: LiveData<String>
+        get() = StoryListViewModel.consoleOutput
+
+    fun setConsoleOutput(output: String){
+        StoryListViewModel.consoleOutput.postValue(output)
+    }
 
     fun get(url: String): StoryListItem {
         return implGet(url)!!
@@ -115,5 +123,9 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
     }
     fun removeAll() = viewModelScope.launch {
         dao.deleteAll()
+    }
+
+    companion object {
+        private val consoleOutput = MutableLiveData<String>()
     }
 }

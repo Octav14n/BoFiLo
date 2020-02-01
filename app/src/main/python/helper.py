@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import os
+from io import StringIO
+import sys
+from contextlib import redirect_stdout, redirect_stderr
 
 import fanficfare.cli
 
@@ -10,22 +13,42 @@ originalGetAdapter = fanficfare.cli.adapters.getAdapter
 handler = None
 
 
+class MyStdOut:
+    def __init__(self):
+        self.stdout = sys.stdout
+
+    def write(self, output):
+        if handler:
+            handler.output(output)
+        else:
+            self.stdout.write('<%s>' % output.replace('\n', '\\n'))
+            if '\n' in output:
+                self.stdout.write('\n')
+            self.stdout.flush()
+
+    def flush(self):
+        pass
+
+
+sys.stdout = MyStdOut()
+
+
 class MyStory(object):
     def __init__(self, story):
         self.story = story
 
     def addChapter(self, chap, newchap=False):
         self.story.addChapter(chap, newchap)
-        print('story Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
+        # print('story Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
         if handler:
             handler.chapters(len(self.story.chapters), self.story.getChapterCount())
 
     def setMetadata(self, key, value, condremoveentities=True):
         self.story.setMetadata(key, value, condremoveentities)
-        if key == "numChapters":
+        if key == 'numChapters':
             if handler:
                 handler.chapters(0, self.story.getChapterCount())
-        elif key == "title" and handler:
+        elif key == 'title' and handler:
             handler.title(value)
             # print("Story Chapter count: %d" % self._maxChapterCount)
 
@@ -106,6 +129,7 @@ def start(my_handler, url, save_cache=False):
     ]
     if save_cache:
         options.insert(0, '--save-cache')
+
     fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
 
 

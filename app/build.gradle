@@ -68,4 +68,5 @@ dependencies {
 
 // Testing
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 }

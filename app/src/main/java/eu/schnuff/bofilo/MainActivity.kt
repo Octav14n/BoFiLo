@@ -1,9 +1,12 @@
 package eu.schnuff.bofilo
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -26,21 +29,28 @@ class MainActivity : AppCompatActivity() {
         // adapter.init(application)
         storyListViewModel = StoryListViewModel(application)
         adapter = StoryListAdapter(storyListViewModel!!)
-        val storyListItems = storyListViewModel!!.allItems
         var initializedOldDownloads = false
-        storyListItems.observe(this, Observer {
-            it?.let {
-                val finished = it.toMutableList()
-                if (!initializedOldDownloads) {
-                    for (item in it) {
-                        if (!item.finished) {
-                            scheduleDownload(item.url)
-                            finished.remove(item)
-                        }
+        storyListViewModel!!.allItems.observe(this, Observer {
+            val finished = it.toMutableList()
+            if (!initializedOldDownloads) {
+                for (item in it) {
+                    if (!item.finished) {
+                        scheduleDownload(item.url)
+                        finished.remove(item)
                     }
-                    initializedOldDownloads = true
                 }
-                adapter!!.setAll(finished.toTypedArray())
+                initializedOldDownloads = true
+            }
+            adapter!!.setAll(finished.toTypedArray())
+        })
+        storyListViewModel!!.consoleOutput.observe(this, Observer {
+            if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
+                if (it == "") {
+                    consoleOutputScroll.visibility = View.GONE
+                } else {
+                    consoleOutputScroll.visibility = View.VISIBLE
+                    consoleOutput.text = it
+                }
             }
         })
         story_list.adapter = adapter
