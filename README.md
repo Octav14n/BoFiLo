@@ -2,7 +2,7 @@
 # BoFiLo (Book Fiction Loader)
 A Android frontend for https://github.com/JimmXinu/FanFicFare
 
-Download apk from [releases](https://github.com/Octav14n/BoFiLo/releases)
+Download apk from [![](app/src/main/res/drawable-mdpi/ic_notification_download.png) releases](https://github.com/Octav14n/BoFiLo/releases)
 
 ## How to use this App
 1. Go to "Settings" and choose where to store your Epub files
@@ -16,6 +16,11 @@ Download apk from [releases](https://github.com/Octav14n/BoFiLo/releases)
 ## Screenshots
 [![Main screen](.github/screenshots/main_preview.png)](.github/screenshots/main.png)
 [![Setting screen](.github/screenshots/settings_preview.png)](.github/screenshots/settings.png)
+
+### For Developers:
+the access to FanFicFare happens in [helper.py](app/src/main/python/helper.py).  
+the function "start" gets called by [StoryDownloadService.kt](app/src/main/java/eu/schnuff/bofilo/StoryDownloadService.kt)  
+to be able to interact between Kotlin(/Java) and Python [Chaquopy](https://chaquo.com/chaquopy/) is used (closed source but at no charge for open source products)
 
 
 [logo]: app/src/main/res/mipmap-hdpi/ic_launcher_round.png "Logo Bofilo"
