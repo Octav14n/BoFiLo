@@ -12,8 +12,8 @@ A Android frontend for https://github.com/JimmXinu/FanFicFare
 - The Icon in the bottom right of the main screen starts downloading Epubs for testing purposes
 
 ## Screenshots
-![Main screen](.github/screenshots/main.png)
-![Setting screen](.github/screenshots/settings.png)
+[![Main screen](.github/screenshots/main_preview.png)](.github/screenshots/main.png)
+[![Setting screen](.github/screenshots/settings_preview.png)](.github/screenshots/settings.png)
 
 
 [logo]: app/src/main/res/mipmap-hdpi/ic_launcher_round.png "Logo Bofilo"
