@@ -42,25 +42,34 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
         val item = myDataset[position]
         holder.view.header.text = item.title
         holder.view.url.text = item.url
-        if (!item.finished) {
+        if (item.finished) {
+            // Hide progress items of finished downloads
+            holder.view.progress.visibility = View.GONE
+            holder.view.progress_text.visibility = View.GONE
+        } else {
+            // Handle items in the waiting queue
             val p = item.progress ?: 0
             val m = item.max
             holder.view.progress.visibility = View.VISIBLE
-            if (item.url == StoryDownloadService.ActiveItem?.url) {
-                holder.view.progress_text.visibility = View.VISIBLE
-                holder.view.progress.isIndeterminate = (p < 1)
-                holder.view.progress_text.text = "$p/${m ?: "∞"}"
-                holder.view.progress.progress = p
-                holder.view.progress.max = m ?: (p + 1)
-            } else {
+            if (item.url != StoryDownloadService.ActiveItem?.url) {
+                // Handle waiting downloads
                 holder.view.progress_text.visibility = View.GONE
                 holder.view.progress.isIndeterminate = true
+            } else {
+                // Handle active download
+                holder.view.progress_text.visibility = View.VISIBLE
+                holder.view.progress_text.text = "$p/${m ?: "∞"}"
+                // as long as no progress is made the progress is indeterminant
+                // (because starting the download takes a while)
+                holder.view.progress.isIndeterminate = (p < 1)
+                holder.view.progress.progress = p
+                // if no maximum is provided use an arbitrary number that is bigger than p
+                holder.view.progress.max = m ?: (p + 1)
             }
-        } else {
-            holder.view.progress.visibility = View.GONE
-            holder.view.progress_text.visibility = View.GONE
         }
         holder.view.setOnLongClickListener {
+            // At the moment we remove items by long clicking
+            // TODO: give a options menu, what shall be done with the clicked item
             viewModel.remove(item)
             true
         }

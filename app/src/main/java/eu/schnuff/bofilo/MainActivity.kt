@@ -1,7 +1,7 @@
 package eu.schnuff.bofilo
 
 import android.content.Intent
-import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.Menu
@@ -23,16 +23,21 @@ class MainActivity : AppCompatActivity() {
     private var storyListViewModel: StoryListViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Initiate View
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        // adapter.init(application)
-        storyListViewModel = StoryListViewModel(application)
-        adapter = StoryListAdapter(storyListViewModel!!)
+
+        // Initiate RecyclerView
         var initializedOldDownloads = false
+        storyListViewModel = StoryListViewModel(application)
         storyListViewModel!!.allItems.observe(this, Observer {
-            val finished = it.toMutableList()
-            if (!initializedOldDownloads) {
+            if (initializedOldDownloads) {
+                // at the 2nd and later calls only pass the data through
+                adapter!!.setAll(it)
+            } else {
+                // if this is the first call then enqueue all non finished items for downloading.
+                val finished = it.toMutableList()
                 for (item in it) {
                     if (!item.finished) {
                         scheduleDownload(item.url)
@@ -40,22 +45,31 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 initializedOldDownloads = true
-            }
-            adapter!!.setAll(finished.toTypedArray())
-        })
-        storyListViewModel!!.consoleOutput.observe(this, Observer {
-            if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
-                if (it == "") {
-                    consoleOutputScroll.visibility = View.GONE
-                } else {
-                    consoleOutputScroll.visibility = View.VISIBLE
-                    consoleOutput.text = it
-                }
+                adapter!!.setAll(finished.toTypedArray())
             }
         })
+
+        adapter = StoryListAdapter(storyListViewModel!!)
         story_list.adapter = adapter
         (story_list.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
+        // Initiate console
+        storyListViewModel!!.consoleOutput.observe(this, Observer {
+            // Test if console shall be shown
+            if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
+                if (it == "") {
+                    // if no text is available then hide the console
+                    consoleOutputScroll.visibility = View.GONE
+                } else {
+                    // show the text and scroll to the newest entry
+                    consoleOutput.text = it
+                    consoleOutputScroll.visibility = View.VISIBLE
+                    consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
+                }
+            }
+        })
+
+        // For debugging purposes the Icon in the bottom right starts many downloads
         fab.setOnClickListener { view ->
             // Test urls.
             for (url in listOf(
@@ -81,11 +95,13 @@ class MainActivity : AppCompatActivity() {
                     //.setAction("Action", null)
         }
 
+        // Handle potential new download request
         if (intent != null)
             onNewIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
+        // Handle potential new download request
         super.onNewIntent(intent)
 
         if (intent.action == Intent.ACTION_SEND) {
@@ -95,12 +111,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun scheduleDownload(url: String) = GlobalScope.async {
-        val newUrl = storyListViewModel!!.add(url).url
-        startService(Intent(this@MainActivity, StoryDownloadService::class.java).apply {
-            putExtra(StoryDownloadService.PARAM_URL, newUrl)
-            // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
-        })
+    private fun scheduleDownload(url: String) {
+        Thread {
+            val newUrl = storyListViewModel!!.add(url).url
+            val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
+                putExtra(StoryDownloadService.PARAM_URL, newUrl)
+                // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        }.start()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

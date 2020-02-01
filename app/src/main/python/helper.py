@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 import os
-from io import StringIO
 import sys
-from contextlib import redirect_stdout, redirect_stderr
 
 import fanficfare.cli
 
+# read defaults.ini
 with open(os.path.dirname(fanficfare.__file__) + '/defaults.ini', 'r') as f:
     default_ini = f.read()
+# no personal ini provided by default
 personal_ini = None
 originalGetAdapter = fanficfare.cli.adapters.getAdapter
 handler = None
 
 
+# wrapper for sys.stdout to redirect it to ui console
 class MyStdOut:
     def __init__(self):
         self.stdout = sys.stdout
@@ -33,6 +34,7 @@ class MyStdOut:
 sys.stdout = MyStdOut()
 
 
+# wrapper for FanFicFare Story to access progress, title and filename of the downloaded story
 class MyStory(object):
     def __init__(self, story):
         self.story = story
@@ -64,6 +66,7 @@ class MyStory(object):
         return getattr(self.story, attr)
 
 
+# Wrapper for FanFicFare Adapters to react to login- and adult-check -prompts.
 class MyAdapter(object):
     def __init__(self, adapter):
         self.adapter = adapter
@@ -93,6 +96,7 @@ class MyAdapter(object):
         return getattr(self.adapter, attr)
 
 
+# This function wraps the adapter and story
 def my_get_adapter(config, url, anyurl=False):
     adapter = originalGetAdapter(config, url, anyurl)
     if handler:
@@ -101,6 +105,7 @@ def my_get_adapter(config, url, anyurl=False):
     return MyAdapter(adapter)
 
 
+# Calling scripts/anything is not allowed/possible/easy on android
 def my_call(*popenargs, timeout=None, **kwargs):
     pass
 
@@ -113,7 +118,9 @@ def read_personal_ini(path):
 
 def start(my_handler, url, save_cache=False):
     global handler
+    # set Kotlin-Service interface
     handler = my_handler
+    # modify FanFicFare to inject custom code
     fanficfare.cli.adapters.getAdapter = my_get_adapter
     fanficfare.cli.call = my_call
     print("Now starting Story with url '%s'." % url)
@@ -130,6 +137,7 @@ def start(my_handler, url, save_cache=False):
     if save_cache:
         options.insert(0, '--save-cache')
 
+    # run FanFicFare cli version.
     fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
 
 

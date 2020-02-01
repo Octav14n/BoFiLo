@@ -20,6 +20,7 @@ import java.io.File
 class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Replace content with the settings configured in root_preferences.xml
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_activity)
         supportFragmentManager
@@ -38,11 +39,13 @@ class SettingsActivity : AppCompatActivity() {
             get() = PreferenceManager.getDefaultSharedPreferences(context!!.applicationContext)
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            // Replace content with the settings configured in root_preferences.xml
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             setSummary()
 
+            // Add custom actions...
+            // ... to get the "default directory"
             defaultDirectoryPreference.setOnPreferenceClickListener {
-
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -54,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
                 true
             }
 
+            // ... to get the personal.ini
             personaliniPreference.setOnPreferenceClickListener {
                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
@@ -65,6 +69,8 @@ class SettingsActivity : AppCompatActivity() {
                 true
             }
         }
+
+        // Sets summaries where no automatic summary provider is applicable
         private fun setSummary()  {
             val defaultDirectory = sharedPreferences.getString(Constants.PREF_DEFAULT_DIRECTORY, null)
             defaultDirectoryPreference.summary = if (defaultDirectory == null) {
@@ -79,6 +85,7 @@ class SettingsActivity : AppCompatActivity() {
             if (resultCode == RESULT_OK && data != null && data.data != null) when (requestCode) {
                 PICK_DEFAULT_DIRECTORY -> {
                     DocumentFile.fromTreeUri(context!!.applicationContext, data.data!!)?.let {
+                        // Make access to the "default directory" permanent
                         val takeFlags: Int = data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION
                                 or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                         val resolver: ContentResolver = context!!.contentResolver
@@ -93,6 +100,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 PICK_PERSONALINI -> {
                     DocumentFile.fromSingleUri(context!!.applicationContext, data.data!!)?.let {
+                        // copy personal.ini into the data files directory.
                         context!!.contentResolver.copyFile(it.uri, File(context!!.filesDir, "personal.ini").toUri())
                     }
                 }

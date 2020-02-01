@@ -19,6 +19,7 @@ import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
 import eu.schnuff.bofilo.copyFile
+import java.lang.Exception
 
 
 class StoryDownloadService : IntentService("StoryDownloadService") {
@@ -39,36 +40,44 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     }
 
     override fun onHandleIntent(intent: Intent) {
+        // This is where the magic happens
         val url = intent.getStringExtra(PARAM_URL)!!
 
         ActiveItem = viewModel!!.get(url)
-        if (ActiveItem == null) {
+        if (ActiveItem == null || ActiveItem?.finished == true) {
+            // exit if item is canceled/finished in the meantime
             return
-            //viewModel!!.add(url)
         }
+        // Show notification and stop Display-off from killing the service
         wakeLock!!.acquire(20000)
         startForeground(NOTIFICATION_ID, createNotification())
+
+        // Tell the UI/db that we are starting to download
         viewModel!!.start(ActiveItem!!)
         val saveCache = defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
         try {
+            // Load personal.ini
             val personalini = File(filesDir, "personal.ini")
             if (personalini.exists()) {
                 helper.callAttr("read_personal_ini", personalini.absolutePath)
             }
+
+            // Start the python-part of the service (including FanFicFare)
             helper.callAttr("start", this, url, saveCache)
-            ActiveItem?.let {
-                //if (it.max != null && it.progress != null && it.max!! > 0 && it.progress!! >= it.max!!) {
+
+            // Register the (hopefully) successful execution
+            if (ActiveItem != null)
                 this.finished()
-                //}
-            }
-        } catch (e: PyException) {
+
+        } catch (e: Exception) {
             Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
             ActiveItem?.run {
                 viewModel?.setTitle(this, e.localizedMessage)
             }
         } finally {
+            // Reset everything for next download
             ActiveItem = null
             cacheFile = null
             wakeLock!!.release()
@@ -86,42 +95,55 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         wakeLock?.release()
     }
 
+    // Gets called by the script, everything in here will be displayed in the console
     fun output(output: String) {
         outputBuilder.append(output)
         Log.d(TAG, "console: $output")
         viewModel?.setConsoleOutput(outputBuilder.toString())
     }
+    // Gets called by the script, the sanitized version of the url gets passed
     fun start(url: String) {
         Log.d(TAG, "start($ActiveItem --> $url)")
         viewModel!!.setUrl(ActiveItem!!, url)
     }
+    // Gets called by the script if the requested site needs login information
     fun getLogin(passwordOnly: Boolean = false): Array<String> {
+        // TODO implement user interaction to provide password or (username and password).
         output("\n!!! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
         val password = "secret"
         val username = "secret"
         return arrayOf(password, username)
     }
+    // Gets called by the script if the requested site needs adult verification
     fun getIsAdult(): Boolean {
-        return PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_IS_ADULT, false)
+        return defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false)
     }
+    // Gets called by the script if new chapters or new information to maximal-chapters is available
     fun chapters(now: Int?, max: Int?) {
         wakeLock!!.acquire(20000)
         Log.d(TAG, "chapters($ActiveItem, $now, $max)")
         val prevProgress = ActiveItem!!.progress ?: 0
         val prevMax = ActiveItem!!.max ?: 0
         viewModel!!.setProgress(ActiveItem!!, now ?: 0, max)
+
+        // Update notification
         if (now != null && max != null && prevProgress <= now && prevMax <= max)
             startForeground(NOTIFICATION_ID, createNotification())
     }
+    // Gets called by the script to announce the filename the epub will be saved to.
     fun filename(name: String) {
         Log.d(TAG, "filename($name)")
         fileName = name
         cacheFile = File(cacheDir, name).toUri()
         if (originalFile == null) {
+            // if we have not provided a (update able) epub we will do so now
             if (isDir) {
+                // but only if a directory is specified in settings
                 val dir = getDir()
                 originalFile = dir.findFile(name)?.uri
                 originalFile?.let {
+                    // if the original file is available we will copy it to the cache directory
+                    // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
                     Log.d(TAG, "\tnow copying file to cache.")
                     output("Copy extern epub file to cache.\n")
                     wakeLock!!.acquire(60000)
@@ -130,20 +152,23 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             }
         }
     }
+    // Gets called from script if a title is found
     fun title(title: String) {
         viewModel!!.setTitle(ActiveItem!!, title)
         startForeground(NOTIFICATION_ID, createNotification())
     }
     private fun finished() {
-        // copy data back to original file
+        // copy data back to original file...
         cacheFile?.let {
             if (isDir) {
                 if (ActiveItem!!.max != null && ActiveItem!!.progress != null && ActiveItem!!.max!! > 0 && ActiveItem!!.progress!! >= ActiveItem!!.max!!) {
+                    // ... but only if we made progress (hopefully handles errors on the python side)
                     contentResolver.copyFile(
                         it,
                         originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri
                     )
                 }
+                // delete the file in the cache directory
                 it.toFile().delete()
             }
         }
@@ -151,9 +176,12 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         // "inform" user about finish
         viewModel!!.setFinished(ActiveItem!!)
     }
+
+    // provide shortcut
     private val defaultSharedPreference
         get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
+    // Returns weather the default directory is configured or not
     private val isDir
         get() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
     private fun getDir() = DocumentFile.fromTreeUri(applicationContext,
@@ -161,7 +189,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
 
     private fun createNotification(): Notification {
         createNotificationChannel()
-        // Create an explicit intent for an Activity in your app
+        // Create an explicit intent for the Main Activity in your app
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -185,7 +213,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.channel_name)
             val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
@@ -198,13 +226,11 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
 
 
     companion object {
-        const val PARAM_ID = "id"
         const val PARAM_URL = "url"
-        const val PARAM_DIR = "dir"
         const val CHANNEL_ID = "StoryDownloadProgress"
         const val NOTIFICATION_ID = 3001
         var ActiveItem: StoryListItem? = null
         private set
-        const val TAG = "download"
+        const val TAG = "download" // Debug TAG
     }
 }
