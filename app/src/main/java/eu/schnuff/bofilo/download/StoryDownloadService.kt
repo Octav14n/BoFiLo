@@ -28,7 +28,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     private val helper = py.getModule("helper")
     private var wakeLock: PowerManager.WakeLock? = null
     private var viewModel: StoryListViewModel? = null
-    private var originalFile: Uri? = null
+    private var originalFile: DocumentFile? = null
     private var cacheFile: Uri? = null
     private var fileName: String = ""
     private val outputBuilder = StringBuilder()
@@ -79,6 +79,9 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             }
         } finally {
             // Reset everything for next download
+            if (originalFile?.length() ==  0L)
+                originalFile!!.delete()
+            originalFile = null
             ActiveItem = null
             cacheFile = null
             wakeLock!!.release()
@@ -147,15 +150,19 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             if (isDir) {
                 // but only if a directory is specified in settings
                 val dir = getDir()
-                originalFile = dir.findFile(name)?.uri
-                originalFile?.let {
-                    // if the original file is available we will copy it to the cache directory
-                    // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
-                    Log.d(TAG, "\tnow copying file to cache.")
-                    output("Copy extern epub file to cache.\n")
-                    wakeLock!!.acquire(60000)
-                    contentResolver.copyFile(it, cacheFile!!)
-                } ?: output("File not found in folder.\n")
+                originalFile = dir.findFile(name)
+                if (originalFile != null) {
+                    originalFile?.let {
+                        // if the original file is available we will copy it to the cache directory
+                        // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
+                        Log.d(TAG, "\tnow copying file to cache.")
+                        output("Copy extern epub file to cache.\n")
+                        wakeLock!!.acquire(60000)
+                        contentResolver.copyFile(it.uri, cacheFile!!)
+                    }
+                } else {
+                    originalFile = dir.createFile(Constants.MIME_EPUB, name)
+                }
             }
         }
     }
@@ -173,7 +180,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
                     // ... but only if we made progress (hopefully handles errors on the python side)
                     contentResolver.copyFile(
                         it,
-                        originalFile ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri
+                        originalFile?.uri ?: getDir().createFile(Constants.MIME_EPUB, fileName)!!.uri
                     )
                 }
                 // delete the file in the cache directory
