@@ -200,8 +200,15 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_download)
             .setContentTitle(getString(R.string.foreground_name).format(ActiveItem?.title ?: ActiveItem?.url ?: "..."))
-            .setContentText(getString(R.string.foreground_text).format(ActiveItem?.progress ?: 0, ActiveItem?.max ?: getString(R.string.download_default_max)))
-            .setProgress(ActiveItem?.max ?: 1, ActiveItem?.progress ?: 0, (ActiveItem?.progress == null || ActiveItem?.max == 0))
+            .setContentText(getString(R.string.foreground_text).format(
+                ActiveItem?.progress ?: 0,
+                ActiveItem?.max ?: getString(R.string.download_default_max)
+            ))
+            .setProgress(
+                ActiveItem?.max ?: 1,
+                ActiveItem?.progress ?: 0,
+                (ActiveItem?.progress == null || ActiveItem?.max == 0)
+            )
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
