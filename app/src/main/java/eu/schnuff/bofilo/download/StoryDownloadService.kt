@@ -17,11 +17,10 @@ import com.chaquo.python.Python
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
+import eu.schnuff.bofilo.copyFile
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
-import eu.schnuff.bofilo.copyFile
-import java.lang.Exception
 
 
 class StoryDownloadService : IntentService("StoryDownloadService") {
@@ -98,17 +97,20 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     }
 
     // Gets called by the script, everything in here will be displayed in the console
+    @SuppressWarnings("unused")
     fun output(output: String) {
         outputBuilder.append(output)
         Log.d(TAG, "console: $output")
         viewModel?.setConsoleOutput(outputBuilder.toString())
     }
     // Gets called by the script, the sanitized version of the url gets passed
+    @SuppressWarnings("unused")
     fun start(url: String) {
         Log.d(TAG, "start($ActiveItem --> $url)")
         viewModel!!.setUrl(ActiveItem!!, url)
     }
     // Gets called by the script if the requested site needs login information
+    @SuppressWarnings("unused")
     fun getLogin(passwordOnly: Boolean = false): Array<String> {
         // TODO implement user interaction to provide password or (username and password).
         output("\n!!! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
@@ -117,10 +119,12 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         return arrayOf(password, username)
     }
     // Gets called by the script if the requested site needs adult verification
+    @SuppressWarnings("unused")
     fun getIsAdult(): Boolean {
         return defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false)
     }
     // Gets called by the script if new chapters or new information to maximal-chapters is available
+    @SuppressWarnings("unused")
     fun chapters(now: Int?, max: Int?) {
         wakeLock!!.acquire(20000)
         Log.d(TAG, "chapters($ActiveItem, $now, $max)")
@@ -133,6 +137,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
             startForeground(NOTIFICATION_ID, createNotification())
     }
     // Gets called by the script to announce the filename the epub will be saved to.
+    @SuppressWarnings("unused")
     fun filename(name: String) {
         Log.d(TAG, "filename($name)")
         fileName = name
@@ -155,6 +160,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
         }
     }
     // Gets called from script if a title is found
+    @SuppressWarnings("unused")
     fun title(title: String) {
         viewModel!!.setTitle(ActiveItem!!, title)
         startForeground(NOTIFICATION_ID, createNotification())
