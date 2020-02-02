@@ -4,10 +4,10 @@ import android.content.ContentResolver
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import com.chaquo.python.PyObject
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.Helpers.copyFile
+import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
@@ -18,8 +18,8 @@ class StoryDownloadHelper(
     private val wakeLock: PowerManager.WakeLock,
     private val contentResolver: ContentResolver,
     private val cacheDir: File,
-    private val dstDir: DocumentFile?,
-    private val srcDir: DocumentFile?,
+    private val dstDir: FileWrapper?,
+    private val srcDir: FileWrapper?,
     private val viewModel: StoryListViewModel,
     private val consoleOutput: StringBuilder,
     private val isAdult: Boolean,
@@ -34,7 +34,7 @@ class StoryDownloadHelper(
         cacheFile = File(cacheDir, fileName)
     }
     private var cacheFile = File(cacheDir, fileName)
-    private var originalFile: DocumentFile? = null
+    private var originalFile: FileWrapper? = null
     private var checkedForOriginalFile = false
 
     fun run() {
@@ -48,7 +48,7 @@ class StoryDownloadHelper(
             // Register the (hopefully) successful execution
             finished()
         } catch (e: Exception) {
-            viewModel.setTitle(item, e.localizedMessage)
+            viewModel.setTitle(item, e.message ?: e.toString())
             throw e
         } finally {
             // delete the file in the cache directory
@@ -111,7 +111,7 @@ class StoryDownloadHelper(
             // but only if a directory is specified in settings
             output("Starting search extern updateable epub\n")
             val startTime = System.currentTimeMillis()
-            originalFile = srcDir.findFile(name)
+            originalFile = srcDir.getChild(name)
             if (originalFile != null) {
                 originalFile?.let {
                     // if the original file is available we will copy it to the cache directory
@@ -120,7 +120,7 @@ class StoryDownloadHelper(
                     output("Copy extern epub file to cache.\n")
                     wakeLock.acquire(60000)
                     contentResolver.copyFile(it.uri, cacheFile.toUri())
-                    cacheFile.setLastModified(it.lastModified())
+                    cacheFile.setLastModified(it.lastModified)
                 }
             }
             output("Search/Copy complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
@@ -143,7 +143,7 @@ class StoryDownloadHelper(
                 // ... but only if we made progress (hopefully handles errors on the python side)
                 contentResolver.copyFile(
                     cacheFile.toUri(),
-                    originalFile?.uri ?: dstDir.createFile(Constants.MIME_EPUB, fileName)!!.uri
+                    originalFile?.uri ?: dstDir.createFile(Constants.MIME_EPUB, fileName).uri
                 )
             }
         }

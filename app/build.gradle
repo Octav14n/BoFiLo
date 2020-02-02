@@ -37,6 +37,10 @@ android {
 }
 
 dependencies {
+    // Third party
+    implementation 'gun0912.ted:tedpermission:2.2.3'
+
+    // Google/Intellij
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
@@ -55,7 +59,6 @@ dependencies {
 
 // Lifecycle components
     implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.archLifecycleVersion"
-    //kapt "androidx.lifecycle:lifecycle-compiler:$rootProject.archLifecycleVersion"
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.androidxArchVersion"
 
 // ViewModel Kotlin support

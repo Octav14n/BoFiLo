@@ -10,11 +10,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import com.chaquo.python.Python
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
+import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
@@ -39,11 +39,13 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     override fun onHandleIntent(intent: Intent) {
         // This is where the magic happens
         val url = intent.getStringExtra(PARAM_URL)!!
+        startForeground(StoryDownloadService.NOTIFICATION_ID, createNotification(null))
 
 
         val item = viewModel!!.get(url)
         if (item.finished) {
             // exit if item is canceled/finished in the meantime
+            stopForeground(true)
             return
         }
         // Show notification and stop Display-off from killing the service
@@ -114,36 +116,38 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
     // Returns weather the default directory is configured or not
     private fun isDstDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
-    private fun getDstDir() = DocumentFile.fromTreeUri(applicationContext,
-            defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
+    private fun getDstDir() = FileWrapper.fromUri(applicationContext,
+            defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())
     // Returns weather the src dir is configured
     private fun isSrcDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY) && defaultSharedPreference.getBoolean(Constants.PREF_DEFAULT_SRC_DIRECTORY_ENABLED, false)
-    private fun getSrcDir() = DocumentFile.fromTreeUri(applicationContext,
-        defaultSharedPreference.getString(Constants.PREF_DEFAULT_SRC_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
+    private fun getSrcDir() = FileWrapper.fromUri(applicationContext,
+        defaultSharedPreference.getString(Constants.PREF_DEFAULT_SRC_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: getDstDir().uri)
 
-    private fun createNotification(item: StoryListItem): Notification {
+    private fun createNotification(item: StoryListItem?): Notification {
         createNotificationChannel()
         // Create an explicit intent for the Main Activity in your app
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_download)
-            .setContentTitle(getString(R.string.foreground_name).format(item.title ?: item.url ?: "..."))
-            .setContentText(getString(R.string.foreground_text).format(
-                item.progress ?: 0,
-                item.max ?: getString(R.string.download_default_max)
-            ))
-            .setProgress(
-                item.max ?: 1,
-                item.progress ?: 0,
-                (item.progress == null || item.max == 0)
-            )
+            .setContentTitle(getString(R.string.foreground_name).format(item?.title ?: item?.url ?: "..."))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
+
+        if (item != null) {
+            builder.setContentText(getString(R.string.foreground_text).format(
+                       item.progress ?: 0,
+                       item.max ?: getString(R.string.download_default_max)
+                   ))
+                   .setProgress(
+                       item.max ?: 1,
+                       item.progress ?: 0,
+                       (item.progress == null || item.max == 0)
+                   )
+        }
 
         return builder.build()
     }

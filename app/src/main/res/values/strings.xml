@@ -10,6 +10,8 @@
     <string name="foreground_name">Download: %s</string>
     <string name="foreground_text">%d/%s</string>
     <string name="download_default_max">∞</string>
+    <string name="permission_rationale">The storage access is used to directly access your epubs, this will speed up the operation extremely</string>
+    <string name="permission_denied">We will use indirect access to your epubs, this will slow down the operation extremely</string>
 
     <!-- Preference Titles -->
     <string name="preference_general">General</string>
