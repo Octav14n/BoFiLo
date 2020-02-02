@@ -11,12 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
+import eu.schnuff.bofilo.download.StoryDownloadService
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import eu.schnuff.bofilo.settings.SettingsActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 
 class MainActivity : AppCompatActivity() {
     private var adapter: StoryListAdapter? = null

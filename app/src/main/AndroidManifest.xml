@@ -23,7 +23,7 @@
         </activity>
 
         <service
-                android:name=".StoryDownloadService"
+                android:name=".download.StoryDownloadService"
                 android:enabled="true"
                 android:exported="false">
         </service>

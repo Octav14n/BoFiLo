@@ -1,4 +1,4 @@
-package eu.schnuff.bofilo
+package eu.schnuff.bofilo.download
 
 import android.app.*
 import android.content.Context
@@ -13,8 +13,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import com.chaquo.python.PyException
 import com.chaquo.python.Python
+import eu.schnuff.bofilo.Constants
+import eu.schnuff.bofilo.MainActivity
+import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File

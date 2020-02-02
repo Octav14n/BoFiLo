@@ -1,14 +1,13 @@
 package eu.schnuff.bofilo
 
-import android.app.Application
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import eu.schnuff.bofilo.download.StoryDownloadService
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import kotlinx.android.synthetic.main.story_list_detail.view.*
-import kotlin.coroutines.coroutineContext
 
 class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>() {
     private var myDataset = emptyArray<StoryListItem>()
