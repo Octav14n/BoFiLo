@@ -21,6 +21,13 @@
     <string name="preference_general_choose_directory_title">Default directory</string>
     <string name="preference_general_choose_directory_summary_default">Choose a directory where downloaded epubs will be saved to.</string>
     <string name="preference_general_choose_directory_summary">Downloaded epubs will be saved to %s.</string>
+    <string name="preference_general_choose_src_directory_title">Default source directory</string>
+    <string name="preference_general_choose_src_directory_summary_default">Defaults to the same as "Default directory"</string>
+    <string name="preference_general_choose_src_directory_summary">Searching for update able epubs in %s.</string>
+    <string name="preference_general_choose_src_directory_enabled_title">Use different source directory</string>
+    <string name="preference_general_choose_src_directory_enabled_summary">it is especially useful if you save your
+        data in a cloud storage and have access to the files via filesystem
+    </string>
 
     <!-- Developer Preferences -->
     <string name="preference_debug_caching_title">Caching between restarts</string>

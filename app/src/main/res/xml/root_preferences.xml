@@ -15,13 +15,24 @@
   -->
 
 <PreferenceScreen
-        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+        xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
             android:title="@string/preference_general">
         <Preference
                 android:key="pref_default_directory"
-                android:title="@string/preference_general_choose_directory_title"/>
+                android:title="@string/preference_general_choose_directory_title"
+                android:summary="@string/preference_general_choose_directory_summary_default"/>
+        <SwitchPreferenceCompat
+                android:defaultValue="false"
+                android:title="@string/preference_general_choose_src_directory_enabled_title"
+                android:summary="@string/preference_general_choose_src_directory_enabled_summary"
+                android:key="pref_default_src_directory_enabled"/>
+        <Preference
+                android:key="pref_default_src_directory"
+                android:title="@string/preference_general_choose_src_directory_title"
+                android:dependency="pref_default_src_directory_enabled"
+                android:summary="@string/preference_general_choose_src_directory_summary_default"/>
         <SwitchPreferenceCompat
                 android:defaultValue="false"
                 android:key="pref_is_adult"
@@ -38,7 +49,7 @@
                 android:summaryOn="@string/preference_debug_caching_summary_on"
                 android:summaryOff="@string/preference_debug_caching_summary_off"/>
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
                 android:title="@string/preference_debug_console_show_title" android:key="pref_show_console"
                 android:summary="@string/preference_debug_console_show_summary" android:defaultValue="true"/>
         <Preference

@@ -55,7 +55,8 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             wakeLock!!,
             contentResolver,
             cacheDir,
-            if (isDir()) getDir() else null,
+            if (isDstDir()) getDstDir() else null,
+            if (isSrcDir()) getSrcDir() else if (isDstDir()) getDstDir() else null,
             viewModel!!,
             outputBuilder,
             defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false),
@@ -112,9 +113,13 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
 
     // Returns weather the default directory is configured or not
-    private fun isDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
-    private fun getDir() = DocumentFile.fromTreeUri(applicationContext,
+    private fun isDstDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
+    private fun getDstDir() = DocumentFile.fromTreeUri(applicationContext,
             defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
+    // Returns weather the src dir is configured
+    private fun isSrcDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY) && defaultSharedPreference.getBoolean(Constants.PREF_DEFAULT_SRC_DIRECTORY_ENABLED, false)
+    private fun getSrcDir() = DocumentFile.fromTreeUri(applicationContext,
+        defaultSharedPreference.getString(Constants.PREF_DEFAULT_SRC_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())!!
 
     private fun createNotification(item: StoryListItem): Notification {
         createNotificationChannel()

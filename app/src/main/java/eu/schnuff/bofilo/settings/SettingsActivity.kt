@@ -33,6 +33,8 @@ class SettingsActivity : AppCompatActivity() {
     class SettingsFragment : PreferenceFragmentCompat() {
         private val defaultDirectoryPreference: Preference
             get() = findPreference(Constants.PREF_DEFAULT_DIRECTORY)!!
+        private val defaultSrcDirectoryPreference
+            get() = findPreference<Preference>(Constants.PREF_DEFAULT_SRC_DIRECTORY)!!
         private val personaliniPreference: Preference
             get() = findPreference(Constants.PREF_PERSONALINI)!!
         private val sharedPreferences: SharedPreferences
@@ -43,17 +45,21 @@ class SettingsActivity : AppCompatActivity() {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             setSummary()
 
+
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
+
             // Add custom actions...
             // ... to get the "default directory"
             defaultDirectoryPreference.setOnPreferenceClickListener {
-                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                    addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                }
-
                 startActivityForResult(intent, PICK_DEFAULT_DIRECTORY)
-
+                true
+            }
+            defaultSrcDirectoryPreference.setOnPreferenceClickListener {
+                startActivityForResult(intent, PICK_DEFAULT_SRC_DIRECTORY)
                 true
             }
 
@@ -78,12 +84,19 @@ class SettingsActivity : AppCompatActivity() {
             } else {
                 getString(R.string.preference_general_choose_directory_summary).format(defaultDirectory)
             }
+
+            val defaultSrcDirectory = sharedPreferences.getString(Constants.PREF_DEFAULT_SRC_DIRECTORY, null)
+            defaultSrcDirectoryPreference.summary = if (defaultSrcDirectory == null) {
+                getString(R.string.preference_general_choose_src_directory_summary_default)
+            } else {
+                getString(R.string.preference_general_choose_src_directory_summary).format(defaultSrcDirectory)
+            }
         }
 
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             super.onActivityResult(requestCode, resultCode, data)
             if (resultCode == RESULT_OK && data != null && data.data != null) when (requestCode) {
-                PICK_DEFAULT_DIRECTORY -> {
+                PICK_DEFAULT_DIRECTORY, PICK_DEFAULT_SRC_DIRECTORY -> {
                     DocumentFile.fromTreeUri(context!!.applicationContext, data.data!!)?.let {
                         // Make access to the "default directory" permanent
                         val takeFlags: Int = data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -92,7 +105,12 @@ class SettingsActivity : AppCompatActivity() {
                         resolver.takePersistableUriPermission(data.data!!, takeFlags)
 
                         sharedPreferences.edit(true) {
-                            putString(Constants.PREF_DEFAULT_DIRECTORY, it.uri.toString())
+                            val name = when (requestCode) {
+                                PICK_DEFAULT_DIRECTORY -> Constants.PREF_DEFAULT_DIRECTORY
+                                PICK_DEFAULT_SRC_DIRECTORY -> Constants.PREF_DEFAULT_SRC_DIRECTORY
+                                else -> throw IllegalStateException("Name not found.")
+                            }
+                            putString(name, it.uri.toString())
                         }
 
                         setSummary()
@@ -109,7 +127,8 @@ class SettingsActivity : AppCompatActivity() {
 
         companion object {
             const val PICK_DEFAULT_DIRECTORY = 2
-            const val PICK_PERSONALINI = 3
+            const val PICK_DEFAULT_SRC_DIRECTORY = 3
+            const val PICK_PERSONALINI = 4
         }
     }
 }

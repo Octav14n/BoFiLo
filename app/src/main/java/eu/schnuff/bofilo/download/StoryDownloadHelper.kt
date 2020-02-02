@@ -7,7 +7,7 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.chaquo.python.PyObject
 import eu.schnuff.bofilo.Constants
-import eu.schnuff.bofilo.copyFile
+import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.persistence.StoryListItem
 import eu.schnuff.bofilo.persistence.StoryListViewModel
 import java.io.File
@@ -18,7 +18,8 @@ class StoryDownloadHelper(
     private val wakeLock: PowerManager.WakeLock,
     private val contentResolver: ContentResolver,
     private val cacheDir: File,
-    private val directory: DocumentFile?,
+    private val dstDir: DocumentFile?,
+    private val srcDir: DocumentFile?,
     private val viewModel: StoryListViewModel,
     private val consoleOutput: StringBuilder,
     private val isAdult: Boolean,
@@ -105,10 +106,12 @@ class StoryDownloadHelper(
     fun filename(name: String) {
         Log.d(TAG, "filename($name)")
         fileName = name
-        if (!checkedForOriginalFile && directory != null && originalFile == null) {
+        if (!checkedForOriginalFile && srcDir != null && originalFile == null) {
             // if we have not provided a (update able) epub we will do so now
             // but only if a directory is specified in settings
-            originalFile = directory.findFile(name)
+            output("Starting search extern updateable epub\n")
+            val startTime = System.currentTimeMillis()
+            originalFile = srcDir.findFile(name)
             if (originalFile != null) {
                 originalFile?.let {
                     // if the original file is available we will copy it to the cache directory
@@ -117,8 +120,10 @@ class StoryDownloadHelper(
                     output("Copy extern epub file to cache.\n")
                     wakeLock.acquire(60000)
                     contentResolver.copyFile(it.uri, cacheFile.toUri())
+                    cacheFile.setLastModified(it.lastModified())
                 }
             }
+            output("Search/Copy complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
         }
         checkedForOriginalFile = true
     }
@@ -131,19 +136,20 @@ class StoryDownloadHelper(
 
     private fun finished() {
         // copy data back to original file...
-        if (directory != null) {
+        if (dstDir != null) {
             val progress = item.progress
             val max = item.max
             if (max != null && progress != null && max > 0 && progress >= max) {
                 // ... but only if we made progress (hopefully handles errors on the python side)
                 contentResolver.copyFile(
                     cacheFile.toUri(),
-                    originalFile?.uri ?: directory.createFile(Constants.MIME_EPUB, fileName)!!.uri
+                    originalFile?.uri ?: dstDir.createFile(Constants.MIME_EPUB, fileName)!!.uri
                 )
             }
         }
 
         // "inform" user about finish
+        output("\nfinished\n\n")
         viewModel.setFinished(item)
     }
 
