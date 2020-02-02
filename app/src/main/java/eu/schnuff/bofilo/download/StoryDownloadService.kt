@@ -110,7 +110,7 @@ class StoryDownloadService : IntentService("StoryDownloadService") {
     @SuppressWarnings("unused")
     fun start(url: String) {
         Log.d(TAG, "start($ActiveItem --> $url)")
-        viewModel!!.setUrl(ActiveItem!!, url)
+        ActiveItem = viewModel!!.setUrl(ActiveItem!!, url)
     }
     // Gets called by the script if the requested site needs login information
     @SuppressWarnings("unused")

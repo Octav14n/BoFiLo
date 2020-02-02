@@ -48,9 +48,11 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun setUrl(item: StoryListItem, url: String) {
+    fun setUrl(item: StoryListItem, url: String): StoryListItem {
         remove(item)
-        add(item.copy(url))
+        val newItem = item.copy(url)
+        add(newItem)
+        return newItem
     }
 
     fun setProgress(item: StoryListItem, progress: Int, max: Int? = null) {
