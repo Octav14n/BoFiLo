@@ -12,8 +12,8 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import eu.schnuff.bofilo.Constants
+import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.R
-import eu.schnuff.bofilo.copyFile
 import java.io.File
 
 
