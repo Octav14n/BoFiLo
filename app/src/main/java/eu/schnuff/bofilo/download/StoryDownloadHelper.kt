@@ -34,6 +34,7 @@ class StoryDownloadHelper(
     }
     private var cacheFile = File(cacheDir, fileName)
     private var originalFile: DocumentFile? = null
+    private var checkedForOriginalFile = false
 
     fun run() {
         // Tell the UI/db that we are starting to download
@@ -49,11 +50,9 @@ class StoryDownloadHelper(
             viewModel.setTitle(item, e.localizedMessage)
             throw e
         } finally {
-            // Remove originalFile if it is empty
-            originalFile?.let {
-                if (it.exists() && it.length() == 0L)
-                    it.delete()
-            }
+            // delete the file in the cache directory
+            if (cacheFile.exists())
+                cacheFile.delete()
         }
     }
 
@@ -106,25 +105,22 @@ class StoryDownloadHelper(
     fun filename(name: String) {
         Log.d(TAG, "filename($name)")
         fileName = name
-        if (originalFile == null) {
+        if (!checkedForOriginalFile && directory != null && originalFile == null) {
             // if we have not provided a (update able) epub we will do so now
-            if (directory != null) {
-                // but only if a directory is specified in settings
-                originalFile = directory.findFile(name)
-                if (originalFile != null) {
-                    originalFile?.let {
-                        // if the original file is available we will copy it to the cache directory
-                        // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
-                        Log.d(TAG, "\tnow copying file to cache.")
-                        output("Copy extern epub file to cache.\n")
-                        wakeLock.acquire(60000)
-                        contentResolver.copyFile(it.uri, cacheFile.toUri())
-                    }
-                } else {
-                    originalFile = directory.createFile(Constants.MIME_EPUB, name)
+            // but only if a directory is specified in settings
+            originalFile = directory.findFile(name)
+            if (originalFile != null) {
+                originalFile?.let {
+                    // if the original file is available we will copy it to the cache directory
+                    // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
+                    Log.d(TAG, "\tnow copying file to cache.")
+                    output("Copy extern epub file to cache.\n")
+                    wakeLock.acquire(60000)
+                    contentResolver.copyFile(it.uri, cacheFile.toUri())
                 }
             }
         }
+        checkedForOriginalFile = true
     }
     // Gets called from script if a title is found
     @SuppressWarnings("unused")
@@ -145,8 +141,6 @@ class StoryDownloadHelper(
                     originalFile?.uri ?: directory.createFile(Constants.MIME_EPUB, fileName)!!.uri
                 )
             }
-            // delete the file in the cache directory
-            cacheFile.delete()
         }
 
         // "inform" user about finish
