@@ -31,21 +31,16 @@ class MainActivity : AppCompatActivity() {
         var initializedOldDownloads = false
         storyListViewModel = StoryListViewModel(application)
         storyListViewModel!!.allItems.observe(this, Observer {
-            if (initializedOldDownloads) {
-                // at the 2nd and later calls only pass the data through
-                adapter!!.setAll(it)
-            } else {
+            if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
-                val finished = it.toMutableList()
                 for (item in it) {
                     if (!item.finished) {
                         scheduleDownload(item.url)
-                        finished.remove(item)
                     }
                 }
                 initializedOldDownloads = true
-                adapter!!.setAll(finished.toTypedArray())
             }
+            adapter!!.setAll(it)
         })
 
         adapter = StoryListAdapter(storyListViewModel!!)
@@ -63,10 +58,12 @@ class MainActivity : AppCompatActivity() {
                     // show the text and scroll to the newest entry
                     consoleOutput.text = it
                     consoleOutputScroll.visibility = View.VISIBLE
-                    consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
                 }
             }
         })
+        consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
+            consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
+        }
 
         // For debugging purposes the Icon in the bottom right starts many downloads
         fab.setOnClickListener { view ->
@@ -85,7 +82,8 @@ class MainActivity : AppCompatActivity() {
                 "https://www.tthfanfic.org/Story-33037/dogbertcarroll+Wood+it+Work.htm",
                 "https://www.tthfanfic.org/Story-21322/dogbertcarroll+I+wouldn+t+exactly+call+that+sitting.htm",
                 // site: SpaceBattles.com
-                "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/"
+                "https://forums.spacebattles.com/threads/taylor-hebert-pizzeria-tycoon-worm-au-officially-complete.598738/"
+                // "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/" // too long...
             ).reversed()) {
                 scheduleDownload(url)
             }
