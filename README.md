@@ -18,9 +18,12 @@ Download apk from [![](app/src/main/res/drawable-mdpi/ic_notification_download.p
 [![Setting screen](.github/screenshots/settings_preview.png)](.github/screenshots/settings.png)
 
 ### For Developers:
+to be able to interact between Kotlin(/Java) and Python [Chaquopy](https://chaquo.com/chaquopy/) is used (closed source but at no charge for open source products)\
 the access to FanFicFare happens in [helper.py](app/src/main/python/helper.py).  
-the function "start" gets called by [StoryDownloadService.kt](app/src/main/java/eu/schnuff/bofilo/StoryDownloadService.kt)  
-to be able to interact between Kotlin(/Java) and Python [Chaquopy](https://chaquo.com/chaquopy/) is used (closed source but at no charge for open source products)
+
+the interaction between Kotlin and Python happens in:
+- [StoryDownloadService.kt](app/src/main/java/eu/schnuff/bofilo/download/StoryDownloadService.kt) (reading of personal.ini and changedir)
+- [StoryDownloadHelper.kt](app/src/main/java/eu/schnuff/bofilo/download/StoryDownloadHelper.kt) (calling "start" function in python and interacting with the script)
 
 
 [logo]: app/src/main/res/mipmap-hdpi/ic_launcher_round.png "Logo Bofilo"
