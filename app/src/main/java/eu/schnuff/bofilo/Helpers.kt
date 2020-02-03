@@ -55,11 +55,21 @@ object Helpers {
                     // TODO handle non-primary volumes
                 } else if (isDownloadsDocument(uri)) {
                     Log.v(TAG, "Uri is download")
-                    val id = DocumentsContract.getDocumentId(uri)
-                    val contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
-                    )
-                    return getDataColumn(context, contentUri, null, null)
+                    val id = DocumentsContract.getTreeDocumentId(uri)
+                    return when {
+                        id == "downloads" -> {
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
+                        }
+                        id.startsWith("raw:/") -> {
+                            id.substringAfter("raw:/")
+                        }
+                        else -> {
+                            val contentUri = ContentUris.withAppendedId(
+                                Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
+                            )
+                            getDataColumn(context, contentUri, null, null)
+                        }
+                    }
                 } else if (isMediaDocument(uri)) {
                     Log.v(TAG, "Uri is media")
                     val docId = DocumentsContract.getDocumentId(uri)
