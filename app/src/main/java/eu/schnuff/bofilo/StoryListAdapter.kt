@@ -11,6 +11,7 @@ import kotlinx.android.synthetic.main.story_list_detail.view.*
 
 class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>() {
     private var myDataset = emptyArray<StoryListItem>()
+    var onLongClick: (StoryListItem) -> Unit = {}
 
     fun setAll(items: Array<StoryListItem>) {
         myDataset = items
@@ -69,7 +70,7 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
         holder.view.setOnLongClickListener {
             // At the moment we remove items by long clicking
             // TODO: give a options menu, what shall be done with the clicked item
-            viewModel.remove(item)
+            onLongClick(item)
             true
         }
     }

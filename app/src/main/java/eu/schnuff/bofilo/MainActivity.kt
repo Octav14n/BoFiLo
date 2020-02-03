@@ -7,6 +7,7 @@ import android.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -44,6 +45,25 @@ class MainActivity : AppCompatActivity() {
         })
 
         adapter = StoryListAdapter(storyListViewModel!!)
+        adapter!!.onLongClick = { item ->
+            AlertDialog.Builder(this).apply {
+                //setTitle(R.string.list_action_title)
+                setItems(R.array.list_actions) { dialog, which ->
+                    when (which) {
+                        0 -> {
+                            Thread {
+                                storyListViewModel!!.setFinished(item, false)
+                                scheduleDownload(item.url)
+                            }.start()
+                        }
+                        1 -> storyListViewModel!!.remove(item)
+                    }
+                    dialog.dismiss()
+                }
+                create()
+                show()
+            }
+        }
         story_list.adapter = adapter
         (story_list.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 

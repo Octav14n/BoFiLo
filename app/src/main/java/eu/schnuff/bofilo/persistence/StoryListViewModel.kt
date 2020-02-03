@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 class StoryListViewModel(application: Application) : AndroidViewModel(application) {
@@ -14,13 +15,14 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
     val consoleOutput: LiveData<String>
         get() = StoryListViewModel.consoleOutput
 
-    fun setConsoleOutput(output: String){
+    fun setConsoleOutput(output: String) {
         StoryListViewModel.consoleOutput.postValue(output)
     }
 
     fun get(url: String): StoryListItem {
         return implGet(url)!!
     }
+
 
     fun has(url: String): Boolean {
         return implGet(url) != null
@@ -30,16 +32,25 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun add(url: String, title: String? = null, progress: Int? = null, max: Int? = null): StoryListItem {
         // Add item.
-        // if url is already in the db then copy data from it
-        val m = implGet(url)
-        val item = remove(m)?.copy(url, title, progress, max) ?: StoryListItem(title, url, progress, max)
-        add(item)
+        val item = recreate(implGet(url), url, title, progress, max)
+        runBlocking {
+            add(item).join()
+        }
         return item
     }
 
-    private fun remove(story: StoryListItem?): StoryListItem? {
+    private fun recreate(item: StoryListItem?, url: String, title: String?, progress: Int?, max: Int?): StoryListItem {
+        // if url is already in the db then copy data from it
+        return if (item == null) {
+            StoryListItem(title, url, progress, max)
+        } else {
+            remove(item)
+            item.copy(title = title, url = url, progress = progress, max = max)
+        }
+    }
+
+    private fun remove(story: StoryListItem?) {
         story?.let { remove(it) }
-        return story
     }
 
     fun start(item: StoryListItem) {
@@ -68,9 +79,11 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun setFinished(item: StoryListItem) {
-        update(item) {
-            this.finished = true
+    fun setFinished(item: StoryListItem, finishedValue: Boolean = true) {
+        runBlocking {
+            update(item) {
+                this.finished = finishedValue
+            }.join()
         }
     }
 
