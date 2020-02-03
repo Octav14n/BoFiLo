@@ -139,17 +139,26 @@ class StoryDownloadHelper(
         if (dstDir != null) {
             val progress = item.progress
             val max = item.max
-            if (max != null && progress != null && max > 0 && progress >= max) {
+            if (max != null && // Make sure progress was made
+                progress != null &&
+                max > 0 &&
+                progress >= max &&
+                cacheFile.exists() && // Make sure the cache file was written correct
+                cacheFile.length() > 0 &&
+                cacheFile.lastModified() > originalFile?.lastModified ?: 0L) {
                 // ... but only if we made progress (hopefully handles errors on the python side)
+
+                output("Starting to write file to output directory\n")
+                val startTime = System.currentTimeMillis()
                 contentResolver.copyFile(
                     cacheFile.toUri(),
                     originalFile?.uri ?: dstDir.createFile(Constants.MIME_EPUB, fileName).uri
                 )
+                output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
             }
         }
 
         // "inform" user about finish
-        output("\nfinished\n\n")
         viewModel.setFinished(item)
     }
 
