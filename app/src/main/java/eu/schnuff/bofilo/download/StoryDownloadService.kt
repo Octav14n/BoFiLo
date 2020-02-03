@@ -41,7 +41,11 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         val url = intent.getStringExtra(PARAM_URL)!!
         startForeground(StoryDownloadService.NOTIFICATION_ID, createNotification(null))
 
-
+        if (!viewModel!!.has(url)) {
+            // exit if item is canceled/finished in the meantime
+            stopForeground(true)
+            return
+        }
         val item = viewModel!!.get(url)
         if (item.finished) {
             // exit if item is canceled/finished in the meantime
