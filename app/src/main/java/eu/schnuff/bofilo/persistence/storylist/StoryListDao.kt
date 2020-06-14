@@ -1,4 +1,4 @@
-package eu.schnuff.bofilo.persistence
+package eu.schnuff.bofilo.persistence.storylist
 
 import androidx.lifecycle.LiveData
 import androidx.room.*

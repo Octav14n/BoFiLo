@@ -151,9 +151,9 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
                 PICK_PERSONALINI -> {
-                    DocumentFile.fromSingleUri(context!!.applicationContext, data.data!!)?.let {
+                    DocumentFile.fromSingleUri(requireContext().applicationContext, data.data!!)?.let {
                         // copy personal.ini into the data files directory.
-                        context!!.contentResolver.copyFile(it.uri, File(context!!.filesDir, "personal.ini").toUri())
+                        requireContext().contentResolver.copyFile(it.uri, File(requireContext().filesDir, "personal.ini").toUri())
                     }
                 }
             }

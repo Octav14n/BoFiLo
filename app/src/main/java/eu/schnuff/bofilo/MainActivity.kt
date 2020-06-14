@@ -3,20 +3,22 @@ package eu.schnuff.bofilo
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.download.StoryDownloadService
-import eu.schnuff.bofilo.persistence.StoryListViewModel
+import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.SettingsActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
     private var adapter: StoryListAdapter? = null
@@ -50,13 +52,12 @@ class MainActivity : AppCompatActivity() {
                 //setTitle(R.string.list_action_title)
                 setItems(R.array.list_actions) { dialog, which ->
                     when (which) {
-                        0 -> {
-                            Thread {
-                                storyListViewModel!!.setFinished(item, false)
-                                scheduleDownload(item.url)
-                            }.start()
+                        0 -> thread {
+                            storyListViewModel!!.setFinished(item, false)
+                            scheduleDownload(item.url)
                         }
-                        1 -> storyListViewModel!!.remove(item)
+                        1 -> Toast.makeText(this@MainActivity, "Not implemented yet", Toast.LENGTH_SHORT).show()
+                        2 -> storyListViewModel!!.remove(item)
                     }
                     dialog.dismiss()
                 }
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         // Initiate console
         storyListViewModel!!.consoleOutput.observe(this, Observer {
             // Test if console shall be shown
-            if (PreferenceManager.getDefaultSharedPreferences(applicationContext).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
+            if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
                 if (it == "") {
                     // if no text is available then hide the console
                     consoleOutputScroll.visibility = View.GONE

@@ -4,24 +4,26 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import eu.schnuff.bofilo.persistence.storylist.StoryListDao
+import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 
 @Database(entities = [StoryListItem::class], version = 1, exportSchema = false)
-abstract class StoryListDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun storyListDao(): StoryListDao
 
     companion object {
         @Volatile
-        private var INSTANCE: StoryListDatabase? = null
+        private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(
             context: Context
-        ): StoryListDatabase {
+        ): AppDatabase {
             // if the INSTANCE is not null, then return it,
             // if it is, then create the database
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
-                    StoryListDatabase::class.java,
+                    AppDatabase::class.java,
                     "word_database"
                 )
                     .build()

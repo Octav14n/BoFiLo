@@ -5,67 +5,71 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
-import android.preference.PreferenceManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
+import androidx.preference.PreferenceManager
 import com.chaquo.python.Python
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
-import eu.schnuff.bofilo.persistence.StoryListItem
-import eu.schnuff.bofilo.persistence.StoryListViewModel
+import eu.schnuff.bofilo.persistence.storylist.StoryListItem
+import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
 
 
 class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloadListener {
     private val py = Python.getInstance()
     private val helper = py.getModule("helper")
-    private var wakeLock: PowerManager.WakeLock? = null
-    private var viewModel: StoryListViewModel? = null
+    private lateinit var wakeLock: PowerManager.WakeLock
+    private lateinit var viewModel: StoryListViewModel
     private val outputBuilder = StringBuilder()
+    //private val doneDir = File(cacheDir.absolutePath + "/done")
     private var privateIniModified = 0L
 
     override fun onCreate() {
         super.onCreate()
         viewModel = StoryListViewModel(application)
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BoFiLo::DownloadService").apply { setReferenceCounted(false) }
+        //if(!doneDir.isDirectory) doneDir.mkdir()
         py.getModule("os").callAttr("chdir", cacheDir.absolutePath)
         readPersonalIni()
     }
 
-    override fun onHandleIntent(intent: Intent) {
+    override fun onHandleIntent(intent: Intent?) {
+        if (intent == null)
+            return
         // This is where the magic happens
         val url = intent.getStringExtra(PARAM_URL)!!
-        startForeground(StoryDownloadService.NOTIFICATION_ID, createNotification(null))
+        startForeground(NOTIFICATION_ID, createNotification(null))
 
-        if (!viewModel!!.has(url)) {
-            // exit if item is canceled/finished in the meantime
+        if (!viewModel.has(url)) {
+            // exit if item has been canceled/finished in the meantime
             Log.d(TAG, "could not download $url because it is no longer in the Database")
             stopForeground(true)
             return
         }
-        val item = viewModel!!.get(url)
+        val item = viewModel.get(url)
         if (item.finished) {
-            // exit if item is canceled/finished in the meantime
+            // exit if item has been canceled/finished in the meantime
             Log.d(TAG, "could not download $url because it is already finished")
             stopForeground(true)
             return
         }
         // Show notification and stop Display-off from killing the service
-        wakeLock!!.acquire(20000)
+        wakeLock.acquire(20000)
         onStoryDownloadProgress(item)
         val downloadHelper = StoryDownloadHelper(
             arrayOf(this),
             helper,
-            wakeLock!!,
+            wakeLock,
             contentResolver,
             cacheDir,
             if (isDstDir()) getDstDir() else null,
             if (isSrcDir()) getSrcDir() else if (isDstDir()) getDstDir() else null,
-            viewModel!!,
+            viewModel,
             outputBuilder,
             defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false),
             defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false),
@@ -83,8 +87,8 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             ActiveItem = null
             outputBuilder.append(getString(R.string.console_finish_message).format(url))
             outputBuilder.append("\n\n\n")
-            wakeLock!!.release()
-            wakeLock!!.acquire(250)
+            wakeLock.release()
+            wakeLock.acquire(250)
             stopForeground(true)
             // outputBuilder.clear()
             // viewModel?.setConsoleOutput("")
@@ -93,23 +97,23 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
     override fun onStoryDownloadProgress(item: StoryListItem) {
         ActiveItem = item
-        startForeground(StoryDownloadService.NOTIFICATION_ID, createNotification(item))
+        startForeground(NOTIFICATION_ID, createNotification(item))
     }
 
     override fun onDestroy() {
         super.onDestroy()
         ActiveItem = null
-        wakeLock?.release()
+        wakeLock.release()
     }
 
     // Load personal.ini
     private fun readPersonalIni() {
         try {
-            val personalini = File(filesDir, "personal.ini")
-            if (personalini.exists() && personalini.lastModified() > privateIniModified) {
-                helper.callAttr("read_personal_ini", personalini.absolutePath)
-                // if read successfully we dont need to read it twice (except if it has changed)
-                privateIniModified = personalini.lastModified()
+            val personalIni = File(filesDir, "personal.ini")
+            if (personalIni.exists() && personalIni.lastModified() > privateIniModified) {
+                helper.callAttr("read_personal_ini", personalIni.absolutePath)
+                // if read successfully we do not need to read it twice (except if it has changed)
+                privateIniModified = personalIni.lastModified()
             }
         } catch (e: java.lang.Exception) {
             Log.e(TAG, "Reading personal ini resulted in error", e)
@@ -140,7 +144,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             .setSmallIcon(R.drawable.ic_notification_download)
             .setContentTitle(getString(R.string.foreground_name).format(item?.title ?: item?.url ?: "..."))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            // Set the intent that will fire when the user taps the notification
+            // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
 
         if (item != null) {

@@ -12,13 +12,16 @@ interface FileWrapper {
 
     fun createFile(mimeType: String, filename: String): FileWrapper
     fun getChild(filename: String): FileWrapper?
+    fun delete()
+
+    
 
     companion object {
         fun fromUri(context: Context, uri: Uri) : FileWrapper {
             return when {
                 "file" == uri.scheme -> OSFileWrapper(File(uri.path))
                 DocumentsContract.isDocumentUri(context, uri) ->
-                    DocumentFileWrapper(DocumentFile.fromTreeUri(context, uri)!!)
+                    DocumentFileWrapper(context, DocumentFile.fromTreeUri(context, uri)!!)
                     //DocumentFileWrapper(DocumentFile.fromSingleUri(context, uri)!!)
                 else -> throw IllegalArgumentException("uri is not supported.")
             }

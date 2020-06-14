@@ -8,9 +8,10 @@ import com.chaquo.python.PyObject
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
-import eu.schnuff.bofilo.persistence.StoryListItem
-import eu.schnuff.bofilo.persistence.StoryListViewModel
+import eu.schnuff.bofilo.persistence.storylist.StoryListItem
+import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
+import kotlin.concurrent.thread
 
 class StoryDownloadHelper(
     private val progressListeners: Array<StoryDownloadListener>,
@@ -28,12 +29,38 @@ class StoryDownloadHelper(
 ) {
     var item = item
     private set
-    private var fileName = "download_no_name.epub"
-    set(value) {
-        field = value
-        cacheFile = File(cacheDir, fileName)
-    }
-    private var cacheFile = File(cacheDir, fileName)
+    // Gets called by the script to announce the filename the epub will be saved to.
+    @SuppressWarnings("unused")
+    var filename: String = ""
+        get() = if (field.isEmpty()) "download_no_name.epub" else field
+        set (value) {
+            if (value.isEmpty() || value == field)
+                return;
+            field = value
+            cacheFile = File(cacheDir, value)
+            Log.d(TAG, "filename($value)")
+            if (!checkedForOriginalFile && srcDir != null && originalFile == null) {
+                // if we have not provided a (update able) epub and
+                // the user has specified a directory in settings
+                // we will now search/provide an update able epub
+                add_output("Starting search extern update able epub\n")
+                val startTime = System.currentTimeMillis()
+                originalFile = srcDir.getChild(value)
+                originalFile?.let {
+                    // if the original file is available we will copy it to the cache directory
+                    // because we use Storage-Access-Framework (uris begin with "content://") and python can't handle those.
+                    Log.d(TAG, "\tnow copying file to cache.")
+                    add_output("Copy extern epub file to cache.\n")
+                    wakeLock.acquire(60000)
+                    contentResolver.copyFile(it.uri, cacheFile.toUri())
+                    cacheFile.setLastModified(it.lastModified)
+                }
+                add_output("%s complete in %.2f sec.\n".format((if (cacheFile.exists()) "Search + Copy" else "Search"), (System.currentTimeMillis() - startTime).toFloat() / 1000))
+            }
+            checkedForOriginalFile = true
+
+        }
+    private var cacheFile = File(cacheDir, filename)
     private var originalFile: FileWrapper? = null
     private var checkedForOriginalFile = false
 
@@ -44,9 +71,6 @@ class StoryDownloadHelper(
         try {
             // Start the python-part of the service (including FanFicFare)
             helper.callAttr("start", this, item.url, isSaveCache)
-
-            // Register the (hopefully) successful execution
-            finished()
         } catch (e: Exception) {
             viewModel.setTitle(item, e.message ?: e.toString())
             throw e
@@ -65,7 +89,7 @@ class StoryDownloadHelper(
 
     // Gets called by the script, everything in here will be displayed in the console
     @SuppressWarnings("unused")
-    fun output(output: String) {
+    fun add_output(output: String) {
         consoleOutput.append(output)
         Log.d(TAG, "console: $output")
         viewModel.setConsoleOutput(consoleOutput.toString())
@@ -76,85 +100,70 @@ class StoryDownloadHelper(
         Log.d(TAG, "start(${item} --> $url)")
         item = viewModel.setUrl(item, url)
     }
+    // If the script got a title this function gets called
+    @SuppressWarnings("unused")
+    fun title(value: String) {
+        viewModel.setTitle(item, value)
+        notifyProgress()
+    }
+    fun filename(value: String) { this.filename = value }
     // Gets called by the script if the requested site needs login information
     @SuppressWarnings("unused")
-    fun getLogin(passwordOnly: Boolean = false): Array<String> {
-        // TODO implement user interaction to provide password or (username and password).
-        output("\n! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
+    fun get_login(passwordOnly: Boolean = false): Array<String> {
+        // TODO implement user interaction to provide a password or (username and password).
+        add_output("\n! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
         val password = "secret"
         val username = "secret"
         return arrayOf(password, username)
     }
     // Gets called by the script if the requested site needs adult verification
     @SuppressWarnings("unused")
-    fun getIsAdult() = isAdult
+    fun is_adult() = isAdult
     // Gets called by the script if new chapters or new information to maximal-chapters is available
     @SuppressWarnings("unused")
     fun chapters(now: Int?, max: Int?) {
-        wakeLock.acquire(20000)
-        Log.d(TAG, "chapters(${item}, $now, $max)")
-        val prevProgress = item.progress ?: 0
-        val prevMax = item.max ?: 0
-        viewModel.setProgress(item, now ?: 0, max)
+        thread {
+            wakeLock.acquire(20000)
+            Log.d(TAG, "chapters(${item}, $now, $max)")
+            val prevProgress = item.progress ?: 0
+            val prevMax = item.max ?: 0
+            viewModel.setProgress(item, now ?: 0, max)
 
-        // Update notification
-        if (now != null && max != null && prevProgress <= now && prevMax <= max)
-            notifyProgress()
-    }
-    // Gets called by the script to announce the filename the epub will be saved to.
-    @SuppressWarnings("unused")
-    fun filename(name: String) {
-        Log.d(TAG, "filename($name)")
-        fileName = name
-        if (!checkedForOriginalFile && srcDir != null && originalFile == null) {
-            // if we have not provided a (update able) epub we will do so now
-            // but only if a directory is specified in settings
-            output("Starting search extern updateable epub\n")
-            val startTime = System.currentTimeMillis()
-            originalFile = srcDir.getChild(name)
-            if (originalFile != null) {
-                originalFile?.let {
-                    // if the original file is available we will copy it to the cache directory
-                    // because we use Storage-Access-Framework (uris begin with "content://") and python cant handle those.
-                    Log.d(TAG, "\tnow copying file to cache.")
-                    output("Copy extern epub file to cache.\n")
-                    wakeLock.acquire(60000)
-                    contentResolver.copyFile(it.uri, cacheFile.toUri())
-                    cacheFile.setLastModified(it.lastModified)
-                }
-            }
-            output("Search/Copy complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+            // Update notification
+            if (now != null && max != null && prevProgress <= now && prevMax <= max)
+                notifyProgress()
         }
-        checkedForOriginalFile = true
-    }
-    // Gets called from script if a title is found
-    @SuppressWarnings("unused")
-    fun title(title: String) {
-        viewModel.setTitle(item, title)
-        notifyProgress()
     }
 
-    private fun finished() {
+    fun finish() {
         // copy data back to original file...
         if (dstDir != null) {
             val progress = item.progress
             val max = item.max
-            if (max != null && // Make sure progress was made
+            if (max != null && // Make sure the script made progress
                 progress != null &&
                 max > 0 &&
                 progress >= max &&
-                cacheFile.exists() && // Make sure the cache file was written correct
+                cacheFile.exists() && // Make sure the cache file has been written correct
                 cacheFile.length() > 0 &&
                 cacheFile.lastModified() > originalFile?.lastModified ?: 0L) {
                 // ... but only if we made progress (hopefully handles errors on the python side)
 
-                output("Starting to write file to output directory\n")
+                add_output("Starting to write file to output directory\n")
                 val startTime = System.currentTimeMillis()
-                contentResolver.copyFile(
-                    cacheFile.toUri(),
-                    originalFile?.uri ?: dstDir.createFile(Constants.MIME_EPUB, fileName).uri
-                )
-                output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+                val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
+                // originalFile?.delete()
+                // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
+                try {
+                    contentResolver.copyFile(
+                        cacheFile.toUri(),
+                        outputFile.uri
+                    )
+                    add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+                } catch (e: java.lang.Exception) {
+                    add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+                    add_output(e.toString())
+                }
             }
         }
 

@@ -16,6 +16,10 @@ class OSFileWrapper(private val file: File): FileWrapper {
         })
     }
 
+    override fun delete() {
+        file.delete()
+    }
+
     override fun getChild(filename: String): FileWrapper? {
         val f = File(file, filename)
         if (f.exists())
