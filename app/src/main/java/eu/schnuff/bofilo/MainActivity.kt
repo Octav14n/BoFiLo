@@ -21,8 +21,8 @@ import kotlinx.android.synthetic.main.content_main.*
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
-    private var adapter: StoryListAdapter? = null
-    private var storyListViewModel: StoryListViewModel? = null
+    private lateinit var adapter: StoryListAdapter
+    private lateinit var storyListViewModel: StoryListViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Initiate View
@@ -33,7 +33,26 @@ class MainActivity : AppCompatActivity() {
         // Initiate RecyclerView
         var initializedOldDownloads = false
         storyListViewModel = StoryListViewModel(application)
-        storyListViewModel!!.allItems.observe(this, Observer {
+        adapter = StoryListAdapter(storyListViewModel)
+        adapter.onLongClick = { item ->
+            AlertDialog.Builder(this).apply {
+                //setTitle(R.string.list_action_title)
+                setItems(R.array.list_actions) { dialog, which ->
+                    when (which) {
+                        0 -> thread {
+                            storyListViewModel.setFinished(item, false)
+                            scheduleDownload(item.url)
+                        }
+                        1 -> Toast.makeText(this@MainActivity, "Not implemented yet", Toast.LENGTH_SHORT).show()
+                        2 -> storyListViewModel.remove(item)
+                    }
+                    dialog.dismiss()
+                }
+                create()
+                show()
+            }
+        }
+        storyListViewModel.allItems.observe(this, Observer {
             if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
                 for (item in it) {
@@ -43,33 +62,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 initializedOldDownloads = true
             }
-            adapter!!.setAll(it)
+            adapter.setAll(it)
         })
-
-        adapter = StoryListAdapter(storyListViewModel!!)
-        adapter!!.onLongClick = { item ->
-            AlertDialog.Builder(this).apply {
-                //setTitle(R.string.list_action_title)
-                setItems(R.array.list_actions) { dialog, which ->
-                    when (which) {
-                        0 -> thread {
-                            storyListViewModel!!.setFinished(item, false)
-                            scheduleDownload(item.url)
-                        }
-                        1 -> Toast.makeText(this@MainActivity, "Not implemented yet", Toast.LENGTH_SHORT).show()
-                        2 -> storyListViewModel!!.remove(item)
-                    }
-                    dialog.dismiss()
-                }
-                create()
-                show()
-            }
-        }
         story_list.adapter = adapter
         (story_list.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         // Initiate console
-        storyListViewModel!!.consoleOutput.observe(this, Observer {
+        storyListViewModel.consoleOutput.observe(this, Observer {
             // Test if console shall be shown
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
                 if (it == "") {
@@ -131,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDownload(url: String) {
         Thread {
-            val newUrl = storyListViewModel!!.add(url).url
+            val newUrl = storyListViewModel.add(url).url
             val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
                 putExtra(StoryDownloadService.PARAM_URL, newUrl)
                 // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
@@ -160,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.action_reset -> {
-                storyListViewModel!!.removeAll()
+                storyListViewModel.removeAll()
                 true
             }
             else -> super.onOptionsItemSelected(item)

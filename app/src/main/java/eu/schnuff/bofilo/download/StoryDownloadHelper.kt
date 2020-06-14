@@ -35,7 +35,7 @@ class StoryDownloadHelper(
         get() = if (field.isEmpty()) "download_no_name.epub" else field
         set (value) {
             if (value.isEmpty() || value == field)
-                return;
+                return
             field = value
             cacheFile = File(cacheDir, value)
             Log.d(TAG, "filename($value)")
