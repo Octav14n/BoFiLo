@@ -71,7 +71,7 @@ class Handler:
     def add_output(self, txt: str):
         self.output += txt
 
-    def finish(self):
+    def finish(self, success):
         self.is_finished = True
 
 
@@ -193,9 +193,10 @@ def start(my_handler, url, save_cache=False):
     # run FanFicFare cli version.
     try:
         fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
-    finally:
+        get_handler().finish(True)
+    except:
         if get_handler():
-            get_handler().finish()
+            get_handler().finish(False)
 
 
 if __name__ == "__main__":

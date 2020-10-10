@@ -135,9 +135,9 @@ class StoryDownloadHelper(
         }
     }
 
-    fun finish() {
+    fun finish(success: Boolean) {
         // copy data back to original file...
-        if (dstDir != null) {
+        if (success && dstDir != null) {
             val progress = item.progress
             val max = item.max
             if (max != null && // Make sure the script made progress
