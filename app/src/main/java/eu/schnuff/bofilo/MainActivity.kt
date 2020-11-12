@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         // For debugging purposes the Icon in the bottom right starts many downloads
         fab.setOnClickListener { view ->
             // Test urls.
-            for (url in listOf(
+            /*for (url in listOf(
                 // author: Rorschach's Blot (short)
                 "https://www.fanfiction.net/s/2100544/1/Past-Lives",
                 "https://www.fanfiction.net/s/3248583/1/Ground-Hog-Day",
@@ -109,6 +109,14 @@ class MainActivity : AppCompatActivity() {
                 // "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/" // too long...
             ).reversed()) {
                 scheduleDownload(url)
+            }*/
+
+            // Paste url from clipboard.
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription!!.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                clipboard.primaryClip?.getItemAt(0)?.let {
+                    scheduleDownload(it.text.toString())
+                }
             }
 
             Snackbar.make(view, "Downloads scheduled.", Snackbar.LENGTH_SHORT).show()
