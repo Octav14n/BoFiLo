@@ -73,6 +73,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             outputBuilder,
             defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false),
             defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false),
+            this,
             item
         )
 

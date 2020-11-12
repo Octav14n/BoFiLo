@@ -1,6 +1,8 @@
 package eu.schnuff.bofilo.download
 
 import android.content.ContentResolver
+import android.content.Context
+import android.net.Uri
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.net.toUri
@@ -25,17 +27,22 @@ class StoryDownloadHelper(
     private val consoleOutput: StringBuilder,
     private val isAdult: Boolean,
     private val isSaveCache: Boolean,
+    private val context: Context,
     item: StoryListItem
 ) {
     var item = item
     private set
+    private var originalFile = item.uri?.let{ uri -> FileWrapper.fromUri(context, Uri.parse(uri)) }
     // Gets called by the script to announce the filename the epub will be saved to.
     @SuppressWarnings("unused")
-    var filename: String = ""
+    var filename: String = originalFile?.name ?: ""
         get() = if (field.isEmpty()) "download_no_name.epub" else field
         set (value) {
-            if (value.isEmpty() || value == field)
+            if (value.isEmpty() || value == field) {
+                if (originalFile == null)
+                    field = ""
                 return
+            }
             field = value
             cacheFile = File(cacheDir, value)
             Log.d(TAG, "filename($value)")
@@ -46,27 +53,29 @@ class StoryDownloadHelper(
                 add_output("Starting search extern update able epub\n")
                 val startTime = System.currentTimeMillis()
                 originalFile = srcDir.getChild(value)
-                originalFile?.let {
-                    // if the original file is available we will copy it to the cache directory
-                    // because we use Storage-Access-Framework (uris begin with "content://") and python can't handle those.
-                    Log.d(TAG, "\tnow copying file to cache.")
-                    add_output("Copy extern epub file to cache.\n")
-                    wakeLock.acquire(60000)
-                    contentResolver.copyFile(it.uri, cacheFile.toUri())
-                    cacheFile.setLastModified(it.lastModified)
+                originalFile?.uri?.let { uri ->
+                    Log.d(TAG, "found file at uri '%s'".format(uri))
+                    viewModel.setUri(item, uri)
                 }
+                loadOriginalFile()
                 add_output("%s complete in %.2f sec.\n".format((if (cacheFile.exists()) "Search + Copy" else "Search"), (System.currentTimeMillis() - startTime).toFloat() / 1000))
             }
             checkedForOriginalFile = true
 
         }
     private var cacheFile = File(cacheDir, filename)
-    private var originalFile: FileWrapper? = null
     private var checkedForOriginalFile = false
 
     fun run() {
         // Tell the UI/db that we are starting to download
         viewModel.start(item)
+
+        originalFile?.let {
+            add_output("Load extern update able epub\n")
+            val startTime = System.currentTimeMillis()
+            loadOriginalFile()
+            add_output("Loading complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+        }
 
         try {
             // Start the python-part of the service (including FanFicFare)
@@ -78,6 +87,24 @@ class StoryDownloadHelper(
             // delete the file in the cache directory
             if (cacheFile.exists())
                 cacheFile.delete()
+        }
+    }
+
+    private fun loadOriginalFile() {
+        originalFile?.let {
+            // if the original file is available we will copy it to the cache directory
+            // because we use Storage-Access-Framework (uris begin with "content://") and python can't handle those.
+            if (!it.isFile) {
+                originalFile = null
+                filename = ""
+                return
+            }
+            Log.d(TAG, "\tnow copying file ${it.name} to cache.")
+            add_output("Copy extern ${it.name} file to cache.\n")
+            wakeLock.acquire(60000)
+            contentResolver.copyFile(it.uri, cacheFile.toUri())
+            cacheFile.setLastModified(it.lastModified)
+            filename = cacheFile.name
         }
     }
 
@@ -152,6 +179,7 @@ class StoryDownloadHelper(
                 add_output("Starting to write file to output directory\n")
                 val startTime = System.currentTimeMillis()
                 val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
+                Log.d(TAG, "Start saving file to uri '%s'".format(outputFile.uri))
                 // originalFile?.delete()
                 // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
                 try {
@@ -159,6 +187,7 @@ class StoryDownloadHelper(
                         cacheFile.toUri(),
                         outputFile.uri
                     )
+                    viewModel.setUri(item, outputFile.uri)
                     add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
                 } catch (e: java.lang.Exception) {
                     add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))

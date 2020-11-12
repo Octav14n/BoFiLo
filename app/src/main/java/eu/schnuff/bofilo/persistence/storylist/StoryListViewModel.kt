@@ -1,6 +1,7 @@
 package eu.schnuff.bofilo.persistence.storylist
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -33,22 +34,22 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun implGet(url: String) = dao.getByUrl(url)
 
-    fun add(url: String, title: String? = null, progress: Int? = null, max: Int? = null): StoryListItem {
+    fun add(url: String, title: String? = null, uri: String? = null, progress: Int? = null, max: Int? = null): StoryListItem {
         // Add item.
-        val item = recreate(implGet(url), url, title, progress, max)
+        val item = recreate(implGet(url), url, uri, title, progress, max)
         runBlocking {
             add(item).join()
         }
         return item
     }
 
-    private fun recreate(item: StoryListItem?, url: String, title: String?, progress: Int?, max: Int?): StoryListItem {
+    private fun recreate(item: StoryListItem?, url: String, uri: String?, title: String?, progress: Int?, max: Int?): StoryListItem {
         // if url is already in the db then copy data from it
         return if (item == null) {
-            StoryListItem(title, url, progress, max)
+            StoryListItem(title, url, uri, progress, max)
         } else {
             remove(item)
-            item.copy(title = title, url = url, progress = progress, max = max)
+            item.copy(title = title, url = url, uri = uri, progress = progress, max = max)
         }
     }
 
@@ -79,6 +80,12 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
     fun setTitle(item: StoryListItem, title: String) {
         update(item) {
             this.title = title
+        }
+    }
+
+    fun setUri(item: StoryListItem, uri: Uri) {
+        update(item) {
+            this.uri = uri.toString()
         }
     }
 

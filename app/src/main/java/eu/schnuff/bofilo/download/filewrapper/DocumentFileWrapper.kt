@@ -11,6 +11,14 @@ class DocumentFileWrapper(
 ): FileWrapper {
     override val uri: Uri
         get() = file.uri
+
+    override val name: String
+        get() = file.name ?: "NAN"
+    override val isDirectory: Boolean
+        get() = file.isDirectory
+    override val isFile: Boolean
+        get() = file.isFile
+
     override val lastModified: Long
         get() = file.lastModified()
 
@@ -30,17 +38,15 @@ class DocumentFileWrapper(
         // Log.d("dfw", "querying $uri --> $baseUri")
         context.contentResolver.query(baseUri, arrayOf(
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-            DocumentsContract.Document.COLUMN_MIME_TYPE,
             DocumentsContract.Document.COLUMN_DOCUMENT_ID
-        ), null, null, null)?.use {
+        ), DocumentsContract.Document.COLUMN_DISPLAY_NAME + " = ?", arrayOf(filename), null)?.use {
             val nameIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             val idIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
             while (it.moveToNext()) {
                 val name = it.getString(nameIndex)
-                // Log.d("dfw", "get child: $filename <-> $name (uri: ${it.getString(idIndex)})")
                 if (filename == name) {
                     val childId = it.getString(idIndex)
-                    val childUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, childId)
+                    val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childId)
                     return DocumentFileWrapper(context, DocumentFile.fromSingleUri(context, childUri)!!)
                 }
             }

@@ -7,6 +7,12 @@ import java.io.File
 class OSFileWrapper(private val file: File): FileWrapper {
     override val uri: Uri
         get() = file.toUri()
+    override val name: String
+        get() = file.name
+    override val isDirectory: Boolean
+        get() = file.isDirectory
+    override val isFile: Boolean
+        get() = file.isFile
     override val lastModified: Long
         get() = file.lastModified()
 

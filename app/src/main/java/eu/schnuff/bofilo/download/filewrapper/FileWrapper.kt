@@ -1,14 +1,17 @@
 package eu.schnuff.bofilo.download.filewrapper
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import java.io.File
 
 interface FileWrapper {
     val uri: Uri
+    val name: String
     val lastModified: Long
+    val isDirectory: Boolean
+    val isFile: Boolean
 
     fun createFile(mimeType: String, filename: String): FileWrapper
     fun getChild(filename: String): FileWrapper?
@@ -18,12 +21,14 @@ interface FileWrapper {
 
     companion object {
         fun fromUri(context: Context, uri: Uri) : FileWrapper {
-            return when {
-                "file" == uri.scheme -> OSFileWrapper(File(uri.path))
-                DocumentsContract.isDocumentUri(context, uri) ->
-                    DocumentFileWrapper(context, DocumentFile.fromTreeUri(context, uri)!!)
-                    //DocumentFileWrapper(DocumentFile.fromSingleUri(context, uri)!!)
-                else -> throw IllegalArgumentException("uri is not supported.")
+            return when (uri.scheme) {
+                ContentResolver.SCHEME_FILE -> OSFileWrapper(File(uri.path!!))
+                ContentResolver.SCHEME_CONTENT -> DocumentFileWrapper(context, if(DocumentFile.isDocumentUri(context, uri)) {
+                    DocumentFile.fromSingleUri(context, uri)
+                } else {
+                    DocumentFile.fromTreeUri(context, uri)
+                }!!)
+                else -> throw IllegalArgumentException("uri '%s' is not supported.".format(uri))
             }
         }
     }

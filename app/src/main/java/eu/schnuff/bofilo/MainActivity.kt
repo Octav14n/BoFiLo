@@ -1,5 +1,8 @@
 package eu.schnuff.bofilo
 
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -130,7 +133,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDownload(url: String) {
         Thread {
-            val newUrl = storyListViewModel.add(url).url
+            val newUrl = if (storyListViewModel.has(url)) url else storyListViewModel.add(url).url
             val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
                 putExtra(StoryDownloadService.PARAM_URL, newUrl)
                 // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
