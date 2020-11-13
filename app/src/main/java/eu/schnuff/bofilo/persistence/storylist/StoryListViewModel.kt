@@ -83,9 +83,9 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun setUri(item: StoryListItem, uri: Uri) {
+    fun setUri(item: StoryListItem, uri: Uri?) {
         update(item) {
-            this.uri = uri.toString()
+            this.uri = uri?.toString()
         }
     }
 

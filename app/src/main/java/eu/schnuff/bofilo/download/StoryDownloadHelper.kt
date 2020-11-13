@@ -150,6 +150,8 @@ class StoryDownloadHelper(
     // Gets called by the script if new chapters or new information to maximal-chapters is available
     @SuppressWarnings("unused")
     fun chapters(now: Int?, max: Int?) {
+        if (now == null || max == null || now == 0)
+            return
         thread {
             wakeLock.acquire(20000)
             Log.d(TAG, "chapters(${item}, $now, $max)")
@@ -158,7 +160,7 @@ class StoryDownloadHelper(
             viewModel.setProgress(item, now ?: 0, max)
 
             // Update notification
-            if (now != null && max != null && prevProgress <= now && prevMax <= max)
+            if (prevProgress <= now && prevMax <= max)
                 notifyProgress()
         }
     }
@@ -195,6 +197,8 @@ class StoryDownloadHelper(
                     add_output(e.toString())
                 }
             }
+        } else {
+            viewModel.setUri(item, null)
         }
 
         // "inform" user about finish
