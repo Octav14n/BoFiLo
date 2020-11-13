@@ -79,7 +79,8 @@ class StoryDownloadHelper(
 
         try {
             // Start the python-part of the service (including FanFicFare)
-            helper.callAttr("start", this, item.url, isSaveCache)
+            val argument = originalFile?.name ?: item.url
+            helper.callAttr("start", this, argument, isSaveCache)
         } catch (e: Exception) {
             viewModel.setTitle(item, e.message ?: e.toString())
             throw e
