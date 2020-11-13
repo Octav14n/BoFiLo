@@ -22,13 +22,13 @@ interface FileWrapper {
     companion object {
         fun fromUri(context: Context, uri: Uri) : FileWrapper {
             return when (uri.scheme) {
-                ContentResolver.SCHEME_FILE -> OSFileWrapper(File(uri.path!!))
+                ContentResolver.SCHEME_FILE, null -> OSFileWrapper(File(uri.path!!))
                 ContentResolver.SCHEME_CONTENT -> DocumentFileWrapper(context, if(DocumentFile.isDocumentUri(context, uri)) {
                     DocumentFile.fromSingleUri(context, uri)
                 } else {
                     DocumentFile.fromTreeUri(context, uri)
                 }!!)
-                else -> throw IllegalArgumentException("uri '%s' is not supported.".format(uri))
+                else -> throw IllegalArgumentException("uri '$uri', scheme '${uri.scheme}' is not supported.")
             }
         }
     }
