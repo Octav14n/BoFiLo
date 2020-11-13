@@ -50,7 +50,7 @@
                 android:summaryOff="@string/preference_debug_caching_summary_off"/>
 
         <SwitchPreference
-                android:title="@string/preference_debug_cachesaf_summary" android:key="pref_cache_saf"
+                android:title="@string/preference_debug_cachesaf_title" android:key="pref_cache_saf"
                 android:defaultValue="false" android:summary="@string/preference_debug_cachesaf_summary"/>
         <SwitchPreferenceCompat
                 android:title="@string/preference_debug_console_show_title" android:key="pref_show_console"
