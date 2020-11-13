@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
+import eu.schnuff.bofilo.Constants
 
 class DocumentFileWrapper(
     private val context: Context,
@@ -30,7 +32,23 @@ class DocumentFileWrapper(
         file.delete()
     }
 
+    private val isCached: Boolean
+        get() = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
+    private var childCache: Map<String, String>? = null
+
     override fun getChild(filename: String): FileWrapper? {
+        val isCached = this.isCached
+        childCache?.also {
+            if (isCached) {
+                if (it.containsKey(filename)) {
+                    val df = DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(uri, it[filename]))
+                    if (df != null)
+                        return DocumentFileWrapper(context, df)
+                    return null
+                }
+                return null
+            }
+        }
         val baseUri = DocumentsContract.buildChildDocumentsUriUsingTree(
             uri,
             DocumentsContract.getDocumentId(uri)
@@ -42,6 +60,17 @@ class DocumentFileWrapper(
         ), DocumentsContract.Document.COLUMN_DISPLAY_NAME + " = ?", arrayOf(filename), null)?.use {
             val nameIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             val idIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            if (isCached && childCache == null) {
+                val map = HashMap<String, String>(it.count)
+                while (it.moveToNext()) {
+                    val name = it.getString(nameIndex)
+                    val childId = it.getString(idIndex)
+                    map[name] = childId
+                }
+                childCache = map
+                it.moveToFirst()
+                it.moveToPrevious()
+            }
             while (it.moveToNext()) {
                 val name = it.getString(nameIndex)
                 if (filename == name) {

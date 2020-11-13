@@ -102,6 +102,7 @@ class StoryDownloadHelper(
             Log.d(TAG, "\tnow copying file ${it.name} to cache.")
             add_output("Copy extern ${it.name} file to cache.\n")
             wakeLock.acquire(60000)
+            cacheFile.writeBytes(ByteArray(0))
             contentResolver.copyFile(it.uri, cacheFile.toUri())
             cacheFile.setLastModified(it.lastModified)
             filename = cacheFile.name

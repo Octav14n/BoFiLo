@@ -45,4 +45,8 @@
     <string name="preference_debug_personalini_summary">Caution: This may break the app.\nIt must be a functioning personal.ini file.</string>
     <string name="preference_debug_console_show_title">Show script output</string>
     <string name="preference_debug_console_show_summary">Show the console output of FanFicFare</string>
+    <string name="preference_debug_cachesaf_title">Cache file lookup</string>
+    <string name="preference_debug_cachesaf_summary">Caches child files of your configured directory. Enable if you are
+        using SAF or searching for files takes for ever.
+    </string>
 </resources>
