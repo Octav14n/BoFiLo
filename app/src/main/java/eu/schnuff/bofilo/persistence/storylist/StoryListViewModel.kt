@@ -65,7 +65,7 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun setUrl(item: StoryListItem, url: String): StoryListItem {
         remove(item)
-        val newItem = item.copy(url)
+        val newItem = item.copy(newUrl = url)
         add(newItem)
         return newItem
     }
