@@ -103,10 +103,16 @@ class StoryDownloadHelper(
             Log.d(TAG, "\tnow copying file ${it.name} to cache.")
             add_output("Copy extern ${it.name} file to cache.\n")
             wakeLock.acquire(60000)
-            cacheFile.writeBytes(ByteArray(0))
-            contentResolver.copyFile(it.uri, cacheFile.toUri())
-            cacheFile.setLastModified(it.lastModified)
-            filename = cacheFile.name
+            try {
+                cacheFile.writeBytes(ByteArray(0))
+                contentResolver.copyFile(it.uri, cacheFile.toUri())
+                cacheFile.setLastModified(it.lastModified)
+                filename = cacheFile.name
+            } catch (e: Throwable) {
+                add_output("Error loading file ${e.message}")
+                Log.e(TAG, e.message, e)
+                originalFile = null
+            }
         }
     }
 
@@ -182,20 +188,21 @@ class StoryDownloadHelper(
 
                 add_output("Starting to write file to output directory\n")
                 val startTime = System.currentTimeMillis()
-                val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
-                Log.d(TAG, "Start saving file to uri '%s'".format(outputFile.uri))
-                // originalFile?.delete()
-                // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
                 try {
+                    val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
+                    Log.d(TAG, "Start saving file to uri '%s'".format(outputFile.uri))
+                    // originalFile?.delete()
+                    // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
                     contentResolver.copyFile(
                         cacheFile.toUri(),
                         outputFile.uri
                     )
                     viewModel.setUri(item, outputFile.uri)
                     add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
-                } catch (e: java.lang.Exception) {
+                } catch (e: Throwable) {
                     add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
                     add_output(e.toString())
+                    Log.e(TAG, e.message, e)
                 }
             }
         } else {

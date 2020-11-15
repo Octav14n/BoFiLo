@@ -51,7 +51,7 @@ class DocumentFileWrapper(
         }
         val baseUri = DocumentsContract.buildChildDocumentsUriUsingTree(
             uri,
-            DocumentsContract.getDocumentId(uri)
+            DocumentsContract.getTreeDocumentId(uri)
         )
         // Log.d("dfw", "querying $uri --> $baseUri")
         context.contentResolver.query(baseUri, arrayOf(

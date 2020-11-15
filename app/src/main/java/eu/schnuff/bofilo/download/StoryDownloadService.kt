@@ -80,7 +80,8 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         try {
             readPersonalIni()
             downloadHelper.run()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            outputBuilder.append("Error downloading $url: ${e.message}:\n${e.localizedMessage}")
             Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         } finally {

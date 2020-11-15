@@ -11,6 +11,8 @@ object Constants {
     const val PREF_SHOW_CONSOLE = "pref_show_console"
     const val PREF_IS_ADULT = "pref_is_adult"
 
+    const val TIMEOUT_IO_MILLIS = 15000L
+
     // Mime types
     const val MIME_EPUB = "application/epub+zip"
     const val MIME_INI = "*/*" // no idea what mime type .ini is, android tells me it is "text/plain" but I cant select the ini if I have set it to that.

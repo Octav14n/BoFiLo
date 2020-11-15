@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -117,8 +118,10 @@ class SettingsActivity : AppCompatActivity() {
                         val resolver: ContentResolver = context!!.contentResolver
                         resolver.takePersistableUriPermission(data.data!!, takeFlags)
 
+
+                        val childUri = DocumentsContract.buildChildDocumentsUriUsingTree(it.uri, DocumentsContract.getTreeDocumentId(it.uri))
                         sharedPreferences.edit(true) {
-                            putString(settingName, it.uri.toString())
+                            putString(settingName, childUri.toString())
                         }
 
                         setSummary()
