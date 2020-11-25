@@ -141,9 +141,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDownload(url: String) {
         Thread {
-            val newUrl = if (storyListViewModel.has(url)) url else storyListViewModel.add(url).url
+            val item = if (storyListViewModel.has(url)) storyListViewModel.get(url) else storyListViewModel.add(url)
+            if (item.finished)
+                storyListViewModel.setFinished(item, false)
             val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
-                putExtra(StoryDownloadService.PARAM_URL, newUrl)
+                putExtra(StoryDownloadService.PARAM_URL, item.url)
                 // this.putExtra(StoryDownloadService.PARAM_DIR, "/")
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

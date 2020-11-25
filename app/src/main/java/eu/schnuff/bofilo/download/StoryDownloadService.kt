@@ -80,6 +80,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         try {
             readPersonalIni()
             downloadHelper.run()
+            outputBuilder.append(getString(R.string.console_finish_message).format(url))
         } catch (e: Throwable) {
             outputBuilder.append("Error downloading $url: ${e.message}:\n${e.localizedMessage}")
             Toast.makeText(baseContext, "Error downloading $url: ${e.message}:\n${e.localizedMessage}", Toast.LENGTH_LONG).show()
@@ -87,7 +88,6 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         } finally {
             // Reset everything for next download
             ActiveItem = null
-            outputBuilder.append(getString(R.string.console_finish_message).format(url))
             outputBuilder.append("\n\n\n")
             wakeLock.release()
             wakeLock.acquire(250)
