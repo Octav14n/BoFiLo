@@ -10,9 +10,8 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 
 private const val CONTENT_SCHEME = ContentResolver.SCHEME_CONTENT
 
@@ -24,19 +23,16 @@ object Helpers {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && src.scheme == CONTENT_SCHEME && dst.scheme == CONTENT_SCHEME) {
             DocumentsContract.copyDocument(this, src, dst) // cant copy to cache/data directory -.-
         } else {
-            runBlocking {
-                withTimeout(Constants.TIMEOUT_IO_MILLIS) {
-                    val input = this@copyFile.openInputStream(src)?.buffered()
-                        ?: throw FileNotFoundException(src.toString())
-                    val output = this@copyFile.openOutputStream(dst)?.buffered()
-                        ?: throw FileNotFoundException(dst.toString())
+            val input = this.openInputStream(src)?.buffered()
+                ?: throw FileNotFoundException(src.toString())
+            val outputStream = this.openOutputStream(dst) as? FileOutputStream ?: throw FileNotFoundException(dst.toString())
+            outputStream.channel.truncate(0)
+            val output = outputStream.buffered()
 
-                    input.copyTo(output)
+            input.copyTo(output)
 
-                    input.close()
-                    output.close()
-                }
-            }
+            input.close()
+            output.close()
         }
     }
 

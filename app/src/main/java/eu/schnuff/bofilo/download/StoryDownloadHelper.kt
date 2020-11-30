@@ -100,6 +100,8 @@ class StoryDownloadHelper(
                 filename = ""
                 return
             }
+            if (cacheFile.exists())
+                return
             Log.d(TAG, "\tnow copying file ${it.name} to cache.")
             add_output("Copy extern ${it.name} file to cache.\n")
             wakeLock.acquire(60000)

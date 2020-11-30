@@ -18,6 +18,7 @@ import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
+import java.security.InvalidParameterException
 
 
 class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloadListener {
@@ -42,7 +43,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         if (intent == null)
             return
         // This is where the magic happens
-        val url = intent.getStringExtra(PARAM_URL)!!
+        val url = intent.getStringExtra(PARAM_URL) ?: throw InvalidParameterException("Starting StoryDownloadService must provide url '$PARAM_URL'.")
         startForeground(NOTIFICATION_ID, createNotification(null))
 
         if (!viewModel.has(url)) {
