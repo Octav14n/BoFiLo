@@ -16,22 +16,23 @@ import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
+import eu.schnuff.bofilo.databinding.ActivityMainBinding
 import eu.schnuff.bofilo.download.StoryDownloadService
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.SettingsActivity
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
     private lateinit var adapter: StoryListAdapter
     private lateinit var storyListViewModel: StoryListViewModel
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Initiate View
+        binding = ActivityMainBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
 
         // Initiate RecyclerView
         var initializedOldDownloads = false
@@ -67,8 +68,8 @@ class MainActivity : AppCompatActivity() {
             }
             adapter.setAll(it)
         })
-        story_list.adapter = adapter
-        (story_list.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+        binding.storyList.adapter = adapter
+        (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         // Initiate console
         storyListViewModel.consoleOutput.observe(this, Observer {
@@ -76,20 +77,20 @@ class MainActivity : AppCompatActivity() {
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
                 if (it == "") {
                     // if no text is available then hide the console
-                    consoleOutputScroll.visibility = View.GONE
+                    binding.consoleOutputScroll.visibility = View.GONE
                 } else {
                     // show the text and scroll to the newest entry
-                    consoleOutput.text = it
-                    consoleOutputScroll.visibility = View.VISIBLE
+                    binding.consoleOutput.text = it
+                    binding.consoleOutputScroll.visibility = View.VISIBLE
                 }
             }
         })
-        consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
-            consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
+        binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
+            binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
         }
 
         // For debugging purposes the Icon in the bottom right starts many downloads
-        fab.setOnClickListener { view ->
+        binding.fab.setOnClickListener { view ->
             // Test urls.
             /*for (url in listOf(
                 // author: Rorschach's Blot (short)
