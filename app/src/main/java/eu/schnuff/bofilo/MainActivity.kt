@@ -12,13 +12,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.databinding.ActivityMainBinding
 import eu.schnuff.bofilo.download.StoryDownloadService
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
+import eu.schnuff.bofilo.settings.Settings
 import eu.schnuff.bofilo.settings.SettingsActivity
 import kotlin.concurrent.thread
 
@@ -26,10 +25,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: StoryListAdapter
     private lateinit var storyListViewModel: StoryListViewModel
     private lateinit var binding: ActivityMainBinding
+    private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Initiate View
         binding = ActivityMainBinding.inflate(layoutInflater)
+        settings = Settings(this)
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
@@ -56,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 show()
             }
         }
-        storyListViewModel.allItems.observe(this, Observer {
+        storyListViewModel.allItems.observe(this, {
             if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
                 for (item in it) {
@@ -72,9 +73,9 @@ class MainActivity : AppCompatActivity() {
         (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         // Initiate console
-        storyListViewModel.consoleOutput.observe(this, Observer {
+        storyListViewModel.consoleOutput.observe(this, {
             // Test if console shall be shown
-            if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.PREF_SHOW_CONSOLE, true)) {
+            if (settings.showConsole) {
                 if (it == "") {
                     // if no text is available then hide the console
                     binding.consoleOutputScroll.visibility = View.GONE
@@ -91,27 +92,6 @@ class MainActivity : AppCompatActivity() {
 
         // For debugging purposes the Icon in the bottom right starts many downloads
         binding.fab.setOnClickListener { view ->
-            // Test urls.
-            /*for (url in listOf(
-                // author: Rorschach's Blot (short)
-                "https://www.fanfiction.net/s/2100544/1/Past-Lives",
-                "https://www.fanfiction.net/s/3248583/1/Ground-Hog-Day",
-                "https://www.fanfiction.net/s/3635811/1/Hermione-the-Harem-Girl",
-                // author: Rorschach's Blot (longer)
-                "https://www.fanfiction.net/s/2318355/1/Make-A-Wish",
-                "https://www.fanfiction.net/s/3032621/1/The-Hunt-For-Harry-Potter",
-                "https://www.fanfiction.net/s/3695087/1/Larceny-Lechery-and-Luna-Lovegood",
-                // author: dogbertcarroll
-                "https://www.tthfanfic.org/Story-14005/dogbertcarroll+Walking+in+the+shadows.htm",
-                "https://www.tthfanfic.org/Story-33037/dogbertcarroll+Wood+it+Work.htm",
-                "https://www.tthfanfic.org/Story-21322/dogbertcarroll+I+wouldn+t+exactly+call+that+sitting.htm",
-                // site: SpaceBattles.com
-                "https://forums.spacebattles.com/threads/taylor-hebert-pizzeria-tycoon-worm-au-officially-complete.598738/"
-                // "https://forums.spacebattles.com/threads/this-bites-one-piece-si.356819/" // too long...
-            ).reversed()) {
-                scheduleDownload(url)
-            }*/
-
             // Paste url from clipboard.
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             if (clipboard.hasPrimaryClip() && clipboard.primaryClipDescription!!.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
@@ -141,7 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleDownload(url: String) {
-        Thread {
+        thread {
             val item = if (storyListViewModel.has(url)) storyListViewModel.get(url) else storyListViewModel.add(url)
             if (item.finished)
                 storyListViewModel.setFinished(item, false)
@@ -154,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 startService(intent)
             }
-        }.start()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

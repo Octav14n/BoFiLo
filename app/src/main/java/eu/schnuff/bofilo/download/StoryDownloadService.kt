@@ -8,15 +8,13 @@ import android.os.PowerManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.core.net.toUri
-import androidx.preference.PreferenceManager
 import com.chaquo.python.Python
-import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
+import eu.schnuff.bofilo.settings.Settings
 import java.io.File
 import java.security.InvalidParameterException
 
@@ -26,6 +24,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     private val helper = py.getModule("helper")
     private lateinit var wakeLock: PowerManager.WakeLock
     private lateinit var viewModel: StoryListViewModel
+    private lateinit var settings: Settings
     private val outputBuilder = StringBuilder()
     //private val doneDir = File(cacheDir.absolutePath + "/done")
     private var privateIniModified = 0L
@@ -34,6 +33,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         super.onCreate()
         viewModel = StoryListViewModel(application)
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BoFiLo::DownloadService").apply { setReferenceCounted(false) }
+        settings = Settings(this)
         //if(!doneDir.isDirectory) doneDir.mkdir()
         py.getModule("os").callAttr("chdir", cacheDir.absolutePath)
         readPersonalIni()
@@ -68,12 +68,12 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             wakeLock,
             contentResolver,
             cacheDir,
-            if (isDstDir()) getDstDir() else null,
-            if (isSrcDir()) getSrcDir() else if (isDstDir()) getDstDir() else null,
+            settings.dstDir?.run { FileWrapper.fromUri(applicationContext, this) },
+            (settings.srcDir ?: settings.dstDir)?.run { FileWrapper.fromUri(applicationContext, this) },
             viewModel,
             outputBuilder,
-            defaultSharedPreference.getBoolean(Constants.PREF_IS_ADULT, false),
-            defaultSharedPreference.getBoolean(Constants.PREF_SAVE_CACHE, false),
+            settings.isAdult,
+            settings.saveCache,
             this,
             item
         )
@@ -122,19 +122,6 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             Log.e(TAG, "Reading personal ini resulted in error", e)
         }
     }
-
-    // provide shortcut
-    private val defaultSharedPreference
-        get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-
-    // Returns weather the default directory is configured or not
-    private fun isDstDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY)
-    private fun getDstDir() = FileWrapper.fromUri(applicationContext,
-            defaultSharedPreference.getString(Constants.PREF_DEFAULT_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: cacheDir.toUri())
-    // Returns weather the src dir is configured
-    private fun isSrcDir() = defaultSharedPreference.contains(Constants.PREF_DEFAULT_DIRECTORY) && defaultSharedPreference.getBoolean(Constants.PREF_DEFAULT_SRC_DIRECTORY_ENABLED, false)
-    private fun getSrcDir() = FileWrapper.fromUri(applicationContext,
-        defaultSharedPreference.getString(Constants.PREF_DEFAULT_SRC_DIRECTORY, cacheDir.absolutePath)?.toUri() ?: getDstDir().uri)
 
     private fun createNotification(item: StoryListItem?): Notification {
         createNotificationChannel()
