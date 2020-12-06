@@ -25,8 +25,8 @@ object Helpers {
         } else {
             val input = this.openInputStream(src)?.buffered()
                 ?: throw FileNotFoundException(src.toString())
-            val outputStream = this.openOutputStream(dst) as? FileOutputStream ?: throw FileNotFoundException(dst.toString())
-            outputStream.channel.truncate(0)
+            val outputStream = this.openOutputStream(dst) ?: throw FileNotFoundException(dst.toString())
+            (outputStream as? FileOutputStream)?.channel?.truncate(0)
             val output = outputStream.buffered()
 
             input.copyTo(output)
