@@ -4,6 +4,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
+import eu.schnuff.bofilo.Constants
 import java.io.File
 
 interface FileWrapper {
@@ -21,6 +23,12 @@ interface FileWrapper {
 
     companion object {
         fun fromUri(context: Context, uri: Uri) : FileWrapper {
+            val isCached = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
+            if (isCached && !cache.containsKey(uri))
+                cache[uri] = fromUriImpl(context, uri)
+            return cache[uri]!!
+        }
+        private fun fromUriImpl(context: Context, uri: Uri) : FileWrapper {
             return when (uri.scheme) {
                 ContentResolver.SCHEME_FILE, null -> OSFileWrapper(File(uri.path!!))
                 ContentResolver.SCHEME_CONTENT -> DocumentFileWrapper(context, if(DocumentFile.isDocumentUri(context, uri)) {
@@ -31,5 +39,6 @@ interface FileWrapper {
                 else -> throw IllegalArgumentException("uri '$uri', scheme '${uri.scheme}' is not supported.")
             }
         }
+        private val cache = HashMap<Uri, FileWrapper>()
     }
 }
