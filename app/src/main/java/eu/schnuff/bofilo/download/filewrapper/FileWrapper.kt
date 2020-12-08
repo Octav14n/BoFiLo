@@ -24,9 +24,12 @@ interface FileWrapper {
     companion object {
         fun fromUri(context: Context, uri: Uri) : FileWrapper {
             val isCached = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
-            if (isCached && !cache.containsKey(uri))
-                cache[uri] = fromUriImpl(context, uri)
-            return cache[uri]!!
+            return if (isCached) {
+                if (!cache.containsKey(uri))
+                    cache[uri] = fromUriImpl(context, uri)
+                cache[uri]!!
+            } else
+                fromUriImpl(context, uri)
         }
         private fun fromUriImpl(context: Context, uri: Uri) : FileWrapper {
             return when (uri.scheme) {

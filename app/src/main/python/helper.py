@@ -199,5 +199,13 @@ def start(my_handler, url, save_cache=False):
             get_handler().finish(False)
 
 
+def unnew(filepath):
+    options = [
+        '--unnew',
+        filepath
+    ]
+    fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
+
+
 if __name__ == "__main__":
     start(None, 'https://www.fanfiction.net/s/2318355/1/Make-A-Wish', True)

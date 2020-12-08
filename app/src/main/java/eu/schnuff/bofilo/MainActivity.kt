@@ -6,19 +6,26 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.chaquo.python.Python
 import com.google.android.material.snackbar.Snackbar
+import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.databinding.ActivityMainBinding
 import eu.schnuff.bofilo.download.StoryDownloadService
+import eu.schnuff.bofilo.download.filewrapper.FileWrapper
+import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
 import eu.schnuff.bofilo.settings.SettingsActivity
+import java.io.File
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
@@ -48,7 +55,9 @@ class MainActivity : AppCompatActivity() {
                             storyListViewModel.setFinished(item, false)
                             scheduleDownload(item.url)
                         }
-                        1 -> Toast.makeText(this@MainActivity, "Not implemented yet", Toast.LENGTH_SHORT).show()
+                        1 -> thread {
+                            unNewStory(item)
+                        }
                         2 -> storyListViewModel.remove(item)
                     }
                     dialog.dismiss()
@@ -135,6 +144,42 @@ class MainActivity : AppCompatActivity() {
                 startService(intent)
             }
         }
+    }
+
+    private fun unNewStory(item: StoryListItem) {
+        // Copy file to cache directory
+        if (item.uri == null) {
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "No file is associated with this entry", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+        val original = FileWrapper.fromUri(this, item.uri!!.toUri())
+        val cache = File(cacheDir, original.name)
+        contentResolver.copyFile(original.uri, cache.toUri())
+
+        // call python methods to un-new the file.
+        try {
+            val py = Python.getInstance()
+            py.getModule("os").callAttr("chdir", cacheDir.absolutePath)
+            val helper = py.getModule("helper")
+            helper.callAttr("unnew", cache.absolutePath)
+            helper.close()
+        } catch (e: Throwable) {
+            Log.w(this::class.simpleName, e)
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "An error occurred while running FanFicFare.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            storyListViewModel.setConsoleOutput((storyListViewModel.consoleOutput.value ?: "") + e.message)
+            cache.delete()
+            return
+        }
+
+        // copy back
+        contentResolver.copyFile(cache.toUri(), original.uri)
+        storyListViewModel.setConsoleOutput((storyListViewModel.consoleOutput.value ?: "") + "UnNew ${item.title} successful.\n")
+        cache.delete()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
