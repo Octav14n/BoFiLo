@@ -178,8 +178,11 @@ class MainActivity : AppCompatActivity() {
 
         // copy back
         contentResolver.copyFile(cache.toUri(), original.uri)
-        storyListViewModel.setConsoleOutput((storyListViewModel.consoleOutput.value ?: "") + "UnNew ${item.title} successful.\n")
         cache.delete()
+        runOnUiThread {
+            Toast.makeText(this@MainActivity, "UnNew ${item.title} successful.", Toast.LENGTH_SHORT)
+                .show()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
