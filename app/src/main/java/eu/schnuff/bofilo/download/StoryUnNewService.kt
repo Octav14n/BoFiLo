@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -20,6 +21,7 @@ import kotlin.concurrent.thread
 
 private const val EXTRA_PARAM_URI = "eu.schnuff.bofilo.download.extra.uri"
 private const val CHANNEL_ID = "StoryUnNewService"
+private const val IS_FOREGROUND = false
 
 class StoryUnNewService : Service() {
 
@@ -33,7 +35,8 @@ class StoryUnNewService : Service() {
                 DocumentFile.fromSingleUri(this, itemUri) ?: throw FileNotFoundException("Original file not found.")
             val originalName = original.name!!
             val cache = File(cacheDir, originalName)
-            startForeground(startId, createNotification(originalName, "started"))
+            if (IS_FOREGROUND)
+                startForeground(startId, createNotification(originalName, "started"))
             Log.d(this::class.simpleName, "loading file $originalName, uri: ${original.uri}.")
             if (!cache.isFile)
                 cache.createNewFile()
@@ -50,14 +53,19 @@ class StoryUnNewService : Service() {
 
                 // copy back
                 contentResolver.copyFile(cache.toUri(), original.uri)
-                startForeground(startId, createNotification(originalName, "finished"))
+                if (IS_FOREGROUND)
+                    startForeground(startId, createNotification(originalName, "finished"))
             } catch (e: Throwable) {
                 Log.e(this::class.simpleName, "UnNew error", e)
-                startForeground(startId, createNotification(originalName, "failed"))
+                if (IS_FOREGROUND)
+                    startForeground(startId, createNotification(originalName, "failed"))
+                else
+                    Toast.makeText(this, "Failed to UnNew '$originalName'", Toast.LENGTH_SHORT).show()
             }
 
             cache.delete()
-            stopForeground(false)
+            if (IS_FOREGROUND)
+                stopForeground(false)
             stopSelf(startId)
         }
         return START_REDELIVER_INTENT
@@ -102,7 +110,10 @@ class StoryUnNewService : Service() {
             val intent = Intent(context, StoryUnNewService::class.java).apply {
                 putExtra(EXTRA_PARAM_URI, uri.toString())
             }
-            context.startForegroundService(intent)
+            if (IS_FOREGROUND)
+                context.startForegroundService(intent)
+            else
+                context.startService(intent)
         }
     }
 
