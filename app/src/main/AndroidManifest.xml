@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="eu.schnuff.bofilo">
+          xmlns:tools="http://schemas.android.com/tools" package="eu.schnuff.bofilo">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
             android:name="com.chaquo.python.android.PyApplication"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
+            android:requestLegacyExternalStorage="true" tools:targetApi="q"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
-            android:requestLegacyExternalStorage="true">
+            android:fullBackupContent="@xml/backup_descriptor">
+
         <activity
                 android:name=".settings.SettingsActivity"
                 android:label="@string/title_activity_settings"
@@ -26,16 +28,17 @@
                     android:value="eu.schnuff.bofilo.MainActivity"/>
         </activity>
 
-        <service
-                android:name=".download.StoryDownloadService"
-                android:enabled="true"
-                android:exported="false">
-        </service>
+        <service android:name=".download.StoryDownloadService"
+                 android:enabled="true"
+                 android:exported="false" />
+        <service android:name=".download.StoryUnNewService"
+                 android:enabled="true"
+                 android:exported="false" />
 
         <activity
                 android:name=".MainActivity"
-                android:launchMode="singleTask"
                 android:label="@string/app_name"
+                android:launchMode="singleTask"
                 android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

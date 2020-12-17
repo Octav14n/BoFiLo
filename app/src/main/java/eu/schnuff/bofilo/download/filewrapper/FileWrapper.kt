@@ -22,8 +22,8 @@ interface FileWrapper {
     
 
     companion object {
-        fun fromUri(context: Context, uri: Uri) : FileWrapper {
-            val isCached = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
+        fun fromUri(context: Context, uri: Uri, allowCache: Boolean = true) : FileWrapper {
+            val isCached = allowCache && PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
             return if (isCached) {
                 if (!cache.containsKey(uri))
                     cache[uri] = fromUriImpl(context, uri)
