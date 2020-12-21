@@ -22,6 +22,7 @@ android {
         }
         python {
             pip {
+                options "--extra-index-url", "https://testpypi.python.org/pypi"
                 install "FanFicFare"
                 install "Pillow"
             }
