@@ -175,7 +175,7 @@ def start(my_handler, url, save_cache=False):
     handlers[threading.get_ident()] = my_handler
     # modify FanFicFare to inject custom code
     fanficfare.cli.adapters.getAdapter = my_get_adapter
-    print("Now starting Story with url '%s'." % url)
+    # print("Now starting Story with url '%s'." % url)
     options = [
         '--progressbar',
         # '--meta-only',
