@@ -1,7 +1,29 @@
 #!/usr/bin/env python3
+import sys
+
+
+# wrapper for sys.stdout to redirect it to ui console
+class MyStdOut:
+    def __init__(self, out, prefix=''):
+        self.stdout = out
+        self.prefix = prefix
+
+    def write(self, output):
+        handler = get_handler()
+        if handler:
+            handler.add_output(self.prefix + output)
+        else:
+            self.stdout.write(self.prefix + output)
+
+    def __getattr__(self, attr):
+        return getattr(self.stdout, attr)
+
+
+sys.stdout = MyStdOut(sys.stdout)
+sys.stderr = MyStdOut(sys.stderr, "\nError: ")
+
 import fanficfare.cli
 import os
-import sys
 import threading
 
 # read defaults.ini
@@ -20,25 +42,6 @@ def my_call(*popenargs, timeout=None, **kwargs):
 
 
 fanficfare.cli.call = my_call
-
-
-# wrapper for sys.stdout to redirect it to ui console
-class MyStdOut:
-    def __init__(self):
-        self.stdout = sys.stdout
-
-    def write(self, output):
-        handler = get_handler()
-        if handler:
-            handler.add_output(output)
-        else:
-            self.stdout.write(output)
-
-    def __getattr__(self, attr):
-        return getattr(self.stdout, attr)
-
-
-sys.stdout = MyStdOut()
 
 
 class Handler:
