@@ -1,14 +1,11 @@
 package eu.schnuff.bofilo.download
 
-import android.content.ContentResolver
-import android.content.Context
 import android.net.Uri
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.net.toUri
 import com.chaquo.python.PyObject
 import eu.schnuff.bofilo.Constants
-import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
@@ -19,7 +16,6 @@ class StoryDownloadHelper(
     private val progressListeners: Array<StoryDownloadListener>,
     private val helper: PyObject,
     private val wakeLock: PowerManager.WakeLock,
-    private val contentResolver: ContentResolver,
     private val cacheDir: File,
     private val dstDir: FileWrapper?,
     private val srcDir: FileWrapper?,
@@ -27,12 +23,12 @@ class StoryDownloadHelper(
     private val consoleOutput: StringBuilder,
     private val isAdult: Boolean,
     private val isSaveCache: Boolean,
-    private val context: Context,
+    private val fileInteraction: FileInteraction,
     item: StoryListItem
 ) {
     var item = item
     private set
-    private var originalFile = item.uri?.let{ uri -> FileWrapper.fromUri(context, Uri.parse(uri)) }
+    private var originalFile = item.uri?.let{ uri -> fileInteraction.fromUri(Uri.parse(uri)) }
     // Gets called by the script to announce the filename the epub will be saved to.
     @SuppressWarnings("unused")
     var filename: String = originalFile?.name ?: ""
@@ -45,6 +41,7 @@ class StoryDownloadHelper(
             }
             field = value
             cacheFile = File(cacheDir, value)
+            cacheFile.deleteOnExit()
             Log.d(TAG, "filename($value)")
             if (!checkedForOriginalFile && srcDir != null && originalFile == null) {
                 // if we have not provided a (update able) epub and
@@ -63,7 +60,7 @@ class StoryDownloadHelper(
             checkedForOriginalFile = true
 
         }
-    private var cacheFile = File(cacheDir, filename)
+    private var cacheFile = File(cacheDir, filename).apply { deleteOnExit() }
     private var checkedForOriginalFile = false
 
     fun run() {
@@ -83,11 +80,10 @@ class StoryDownloadHelper(
             helper.callAttr("start", this, argument, isSaveCache)
         } catch (e: Exception) {
             viewModel.setTitle(item, e.message ?: e.toString())
-            throw e
-        } finally {
             // delete the file in the cache directory
             if (cacheFile.exists())
                 cacheFile.delete()
+            throw e
         }
     }
 
@@ -107,7 +103,7 @@ class StoryDownloadHelper(
             wakeLock.acquire(60000)
             try {
                 cacheFile.writeBytes(ByteArray(0))
-                contentResolver.copyFile(it.uri, cacheFile.toUri())
+                fileInteraction.copyFile(it.uri, cacheFile.toUri())
                 cacheFile.setLastModified(it.lastModified)
                 filename = cacheFile.name
             } catch (e: Throwable) {
@@ -195,9 +191,10 @@ class StoryDownloadHelper(
                     Log.d(TAG, "Start saving file to uri '%s'".format(outputFile.uri))
                     // originalFile?.delete()
                     // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
-                    contentResolver.copyFile(
+                    fileInteraction.copyFile(
                         cacheFile.toUri(),
-                        outputFile.uri
+                        outputFile.uri,
+                        async = true
                     )
                     viewModel.setUri(item, outputFile.uri)
                     add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
@@ -209,10 +206,18 @@ class StoryDownloadHelper(
             }
         } else {
             viewModel.setUri(item, null)
+            // delete the file in the cache directory
+            if (cacheFile.exists())
+                cacheFile.delete()
         }
 
         // "inform" user about finish
         viewModel.setFinished(item)
+    }
+
+    interface FileInteraction {
+        fun fromUri(uri: Uri): FileWrapper
+        fun copyFile(src: Uri, dst: Uri, async: Boolean = false)
     }
 
     companion object {

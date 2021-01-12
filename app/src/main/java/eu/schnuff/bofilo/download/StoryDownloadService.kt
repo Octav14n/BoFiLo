@@ -3,12 +3,14 @@ package eu.schnuff.bofilo.download
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.chaquo.python.Python
+import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
@@ -19,7 +21,7 @@ import java.io.File
 import java.security.InvalidParameterException
 
 
-class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloadListener {
+class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloadListener, StoryDownloadHelper.FileInteraction {
     private val py = Python.getInstance()
     private val helper = py.getModule("helper")
     private lateinit var wakeLock: PowerManager.WakeLock
@@ -66,7 +68,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             arrayOf(this),
             helper,
             wakeLock,
-            contentResolver,
+            //contentResolver,
             cacheDir,
             settings.dstDir?.run { FileWrapper.fromUri(applicationContext, this) },
             (settings.srcDir ?: settings.dstDir)?.run { FileWrapper.fromUri(applicationContext, this) },
@@ -96,6 +98,14 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             // outputBuilder.clear()
             // viewModel?.setConsoleOutput("")
         }
+    }
+
+    override fun fromUri(uri: Uri): FileWrapper = FileWrapper.fromUri(this, uri)
+    override fun copyFile(src: Uri, dst: Uri, async: Boolean) {
+        if (async)
+            StoryWriteService.start(this, src, dst)
+        else
+            contentResolver.copyFile(src, dst)
     }
 
     override fun onStoryDownloadProgress(item: StoryListItem) {

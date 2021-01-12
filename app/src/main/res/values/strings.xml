@@ -58,4 +58,7 @@
     <string name="preference_debug_cachesaf_summary">Caches child files of your configured directory. Enable if you are
         using SAF or searching for files takes for ever.
     </string>
+    <string name="story_write_foreground_name">\"Saving file \'%s\'\"</string>
+    <string name="story_write_channel_name">Saving file</string>
+    <string name="story_write_channel_description">Save a file to your configured directory.</string>
 </resources>

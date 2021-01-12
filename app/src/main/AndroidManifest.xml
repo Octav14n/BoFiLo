@@ -34,6 +34,9 @@
         <service android:name=".download.StoryUnNewService"
                  android:enabled="true"
                  android:exported="false" />
+        <service android:name=".download.StoryWriteService"
+                 android:enabled="true"
+                 android:exported="false" />
 
         <activity
                 android:name=".MainActivity"
