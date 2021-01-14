@@ -51,9 +51,7 @@ class MainActivity : AppCompatActivity() {
                             storyListViewModel.setFinished(item, false)
                             scheduleDownload(item.url)
                         }
-                        1 -> thread {
-                            unNewStory(item)
-                        }
+                        1 -> unNewStory(item)
                         2 -> storyListViewModel.remove(item)
                     }
                     dialog.dismiss()
@@ -143,15 +141,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun unNewStory(item: StoryListItem) {
         // Copy file to cache directory
-        val itemUri = item.uri?.toUri()
+        thread {
+            val itemUri = item.uri?.toUri()
 
-        if (itemUri == null) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "No file is associated with this entry", Toast.LENGTH_SHORT).show()
+            if (itemUri == null) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "No file is associated with this entry", Toast.LENGTH_SHORT)
+                        .show()
+                }
+                return@thread
             }
-            return
+            StoryUnNewService.start(this, itemUri)
         }
-        StoryUnNewService.start(this, itemUri)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
