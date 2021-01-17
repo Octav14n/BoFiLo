@@ -41,7 +41,6 @@ class StoryDownloadHelper(
             }
             field = value
             cacheFile = File(cacheDir, value)
-            cacheFile.deleteOnExit()
             Log.d(TAG, "filename($value)")
             if (!checkedForOriginalFile && srcDir != null && originalFile == null) {
                 // if we have not provided a (update able) epub and
@@ -60,7 +59,7 @@ class StoryDownloadHelper(
             checkedForOriginalFile = true
 
         }
-    private var cacheFile = File(cacheDir, filename).apply { deleteOnExit() }
+    private var cacheFile = File(cacheDir, filename)
     private var checkedForOriginalFile = false
 
     fun run() {
@@ -104,7 +103,7 @@ class StoryDownloadHelper(
             try {
                 cacheFile.writeBytes(ByteArray(0))
                 fileInteraction.copyFile(it.uri, cacheFile.toUri())
-                cacheFile.setLastModified(it.lastModified)
+                cacheFile.setLastModified(0) //it.lastModified)
                 filename = cacheFile.name
             } catch (e: Throwable) {
                 add_output("Error loading file ${e.message}")
@@ -183,25 +182,25 @@ class StoryDownloadHelper(
                 cacheFile.length() > 0 &&
                 cacheFile.lastModified() > originalFile?.lastModified ?: 0L) {
                 // ... but only if we made progress (hopefully handles errors on the python side)
-
-                add_output("Starting to write file to output directory\n")
-                val startTime = System.currentTimeMillis()
-                try {
-                    val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
-                    Log.d(TAG, "Start saving file to uri '%s'".format(outputFile.uri))
-                    // originalFile?.delete()
-                    // val outputFile = dstDir.createFile(Constants.MIME_EPUB, filename)
-                    fileInteraction.copyFile(
-                        cacheFile.toUri(),
-                        outputFile.uri,
-                        async = true
-                    )
-                    viewModel.setUri(item, outputFile.uri)
-                    add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
-                } catch (e: Throwable) {
-                    add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
-                    add_output(e.toString())
-                    Log.e(TAG, e.message, e)
+                thread {
+                    add_output("Starting to write file to output directory\n")
+                    val startTime = System.currentTimeMillis()
+                    try {
+                        val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
+                        val outputUri = outputFile.uri
+                        Log.d(TAG, "Start saving file to uri '$outputUri'")
+                        fileInteraction.copyFile(
+                            cacheFile.toUri(),
+                            outputUri,
+                            async = true
+                        )
+                        viewModel.setUri(item, outputUri)
+                        add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+                    } catch (e: Throwable) {
+                        add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
+                        add_output(e.toString())
+                        Log.e(TAG, e.message, e)
+                    }
                 }
             }
         } else {
