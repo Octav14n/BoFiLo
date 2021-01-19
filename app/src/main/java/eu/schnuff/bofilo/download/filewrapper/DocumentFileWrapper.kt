@@ -25,7 +25,13 @@ class DocumentFileWrapper(
         get() = file.lastModified()
 
     override fun createFile(mimeType: String, filename: String): FileWrapper {
-        return DocumentFileWrapper(context, file.createFile(mimeType, filename)!!)
+        var f: DocumentFile? = null
+        while (f == null) {
+            try {
+                f = file.createFile(mimeType, filename)
+            } catch (e: Throwable) {}
+        }
+        return DocumentFileWrapper(context, f)
     }
 
     override fun delete() {
