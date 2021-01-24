@@ -6,6 +6,9 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import androidx.preference.PreferenceManager
 import eu.schnuff.bofilo.Constants
+import eu.schnuff.bofilo.persistence.AppDatabase
+import eu.schnuff.bofilo.persistence.filewrappercache.FileWrapperCacheItem
+import kotlin.concurrent.thread
 
 class DocumentFileWrapper(
     private val context: Context,
@@ -40,52 +43,93 @@ class DocumentFileWrapper(
 
     private val isCached: Boolean
         get() = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_CACHE_SAF, false)
-    private var childCache: Map<String, String>? = null
+    private var childCache: Map<String, String>
+
+    init {
+        val dao = AppDatabase.getDatabase(context).fileWrapperCacheDao()
+        val items = dao.get(parentUri = uri)
+        val map = HashMap<String, String>(items.count())
+        for (item in items) {
+            map[item.filename] = item.childId
+        }
+        childCache = map
+        if (childCache.isNotEmpty())
+            thread {
+                renewChildCache()
+            }
+    }
 
     override fun getChild(filename: String): FileWrapper? {
         val isCached = this.isCached
-        childCache?.also {
-            if (isCached) {
-                if (it.containsKey(filename)) {
-                    val df = DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(uri, it[filename]))
+        if (isCached) {
+            if (childCache.isEmpty())
+                renewChildCache()
+            if (childCache.containsKey(filename)) {
+                val df = DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(uri, childCache[filename]))
+                if (df != null)
+                    return DocumentFileWrapper(context, df)
+                return null
+            }
+        } else {
+            queryDocumentTree { originalFileName, childId ->
+                if (originalFileName == filename) {
+                    val df = DocumentFile.fromSingleUri(context, DocumentsContract.buildDocumentUriUsingTree(uri, childId))
                     if (df != null)
                         return DocumentFileWrapper(context, df)
                     return null
                 }
-                return null
             }
         }
+
+        return null
+    }
+
+    private inline fun queryDocumentTree(itterateChilds: (filename: String, childId: String) -> Unit) {
         val baseUri = DocumentsContract.buildChildDocumentsUriUsingTree(
             uri,
             DocumentsContract.getTreeDocumentId(uri)
         )
-        // Log.d("dfw", "querying $uri --> $baseUri")
+
         context.contentResolver.query(baseUri, arrayOf(
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_DOCUMENT_ID
-        ), DocumentsContract.Document.COLUMN_DISPLAY_NAME + " = ?", arrayOf(filename), null)?.use {
+        ), null, emptyArray(), null)?.use {
             val nameIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             val idIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-            if (isCached && childCache == null) {
-                val map = HashMap<String, String>(it.count)
-                while (it.moveToNext()) {
-                    val name = it.getString(nameIndex)
-                    val childId = it.getString(idIndex)
-                    map[name] = childId
-                }
-                childCache = map
-                it.moveToFirst()
-                it.moveToPrevious()
-            }
+
             while (it.moveToNext()) {
                 val name = it.getString(nameIndex)
-                if (filename == name) {
-                    val childId = it.getString(idIndex)
-                    val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childId)
-                    return DocumentFileWrapper(context, DocumentFile.fromSingleUri(context, childUri)!!)
-                }
+                val childId = it.getString(idIndex)
+                itterateChilds(name, childId)
             }
         }
-        return null
+    }
+
+    private fun renewChildCache() {
+        val old = childCache.toMutableMap()
+        val new = HashMap<String, String>(old.count())
+        val dao = AppDatabase.getDatabase(context).fileWrapperCacheDao()
+
+        queryDocumentTree { name, childId ->
+            when {
+                // Nothing changed for this file-name
+                (old.containsKey(name) && old[name] == childId) -> old.remove(name)
+                // Key changed for this file-name
+                old.containsKey(name) -> {
+                    old.remove(name)
+                    dao.set(childId, uri, name)
+                }
+                // File-name is new
+                else -> dao.add(childId, uri, name)
+            }
+            new[name] = childId
+        }
+
+        val uriS = uri.toString()
+        dao.remove(old.map {
+            FileWrapperCacheItem(it.value, uriS, it.key)
+        })
+
+        childCache = new
     }
 }
