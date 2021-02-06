@@ -17,7 +17,7 @@ class StoryDownloadHelper(
     private val helper: PyObject,
     private val wakeLock: PowerManager.WakeLock,
     private val cacheDir: File,
-    private val dstDir: FileWrapper?,
+    private val dstDir: Uri?,
     private val srcDir: FileWrapper?,
     private val viewModel: StoryListViewModel,
     private val consoleOutput: StringBuilder,
@@ -161,7 +161,7 @@ class StoryDownloadHelper(
             Log.d(TAG, "chapters(${item}, $now, $max)")
             val prevProgress = item.progress ?: 0
             val prevMax = item.max ?: 0
-            viewModel.setProgress(item, now ?: 0, max)
+            viewModel.setProgress(item, now, max)
 
             // Update notification
             if (prevProgress <= now && prevMax <= max)
@@ -182,25 +182,21 @@ class StoryDownloadHelper(
                 cacheFile.length() > 0 &&
                 cacheFile.lastModified() > originalFile?.lastModified ?: 0L) {
                 // ... but only if we made progress (hopefully handles errors on the python side)
-                thread {
-                    add_output("Starting to write file to output directory\n")
-                    val startTime = System.currentTimeMillis()
-                    try {
-                        val outputFile = originalFile ?: dstDir.createFile(Constants.MIME_EPUB, filename)
-                        val outputUri = outputFile.uri
-                        Log.d(TAG, "Start saving file to uri '$outputUri'")
-                        fileInteraction.copyFile(
-                            cacheFile.toUri(),
-                            outputUri,
-                            async = true
-                        )
-                        viewModel.setUri(item, outputUri)
-                        add_output("writing complete in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
-                    } catch (e: Throwable) {
-                        add_output("writing failed in %.2f sec.\n".format((System.currentTimeMillis() - startTime).toFloat() / 1000))
-                        add_output(e.toString())
-                        Log.e(TAG, e.message, e)
-                    }
+                add_output("Starting to write file to output directory\n")
+                if (originalFile != null) {
+                    fileInteraction.copyFile(
+                        cacheFile.toUri(),
+                        originalFile!!.uri,
+                        async = true
+                    )
+                } else {
+                    fileInteraction.copyFile(
+                        item,
+                        cacheFile.toUri(),
+                        dstDir,
+                        Constants.MIME_EPUB,
+                        filename
+                    )
                 }
             }
         } else {
@@ -217,6 +213,7 @@ class StoryDownloadHelper(
     interface FileInteraction {
         fun fromUri(uri: Uri): FileWrapper
         fun copyFile(src: Uri, dst: Uri, async: Boolean = false)
+        fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String)
     }
 
     companion object {

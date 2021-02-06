@@ -70,7 +70,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             wakeLock,
             //contentResolver,
             cacheDir,
-            settings.dstDir?.run { FileWrapper.fromUri(applicationContext, this) },
+            settings.dstDir,
             (settings.srcDir ?: settings.dstDir)?.run { FileWrapper.fromUri(applicationContext, this) },
             viewModel,
             outputBuilder,
@@ -106,6 +106,9 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             StoryWriteService.start(this, src, dst)
         else
             contentResolver.copyFile(src, dst)
+    }
+    override fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String) {
+        StoryWriteService.start(this, item, src, dstDir, fileName, mimeType)
     }
 
     override fun onStoryDownloadProgress(item: StoryListItem) {

@@ -3,6 +3,7 @@ package eu.schnuff.bofilo.download.filewrapper
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import androidx.preference.PreferenceManager
 import eu.schnuff.bofilo.Constants
@@ -28,13 +29,18 @@ class DocumentFileWrapper(
         get() = file.lastModified()
 
     override fun createFile(mimeType: String, filename: String): FileWrapper {
-        var f: DocumentFile? = null
+        var f: DocumentFileWrapper? = null
         while (f == null) {
-            try {
-                f = file.createFile(mimeType, filename)
-            } catch (e: Throwable) {}
+            f = try {
+                file.createFile(mimeType, filename)?.run {
+                    DocumentFileWrapper(context, this)
+                }
+            } catch (e: Throwable) {
+                Log.d(this::class.simpleName, "Failed creating file: %s [mime-type: %s]".format(filename, mimeType), e)
+                getChild(filename, useCaching = false)
+            }
         }
-        return DocumentFileWrapper(context, f)
+        return f
     }
 
     override fun delete() {
@@ -59,8 +65,9 @@ class DocumentFileWrapper(
             }
     }
 
-    override fun getChild(filename: String): FileWrapper? {
-        val isCached = this.isCached
+    override fun getChild(filename: String) = getChild(filename, useCaching = null)
+    private fun getChild(filename: String, useCaching: Boolean? = null): DocumentFileWrapper? {
+        val isCached = useCaching ?: this.isCached
         if (isCached) {
             if (childCache.isEmpty())
                 renewChildCache()
