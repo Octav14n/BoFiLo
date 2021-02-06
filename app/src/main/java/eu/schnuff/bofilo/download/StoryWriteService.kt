@@ -72,7 +72,7 @@ class StoryWriteService : Service() {
             }
 
             stopForeground(true)
-            stopSelf()
+            stopSelf(startId)
         }
 
         return START_REDELIVER_INTENT
