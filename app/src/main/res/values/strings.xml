@@ -6,26 +6,31 @@
     <string name="title_activity_settings">Settings</string>
     <string name="console_finish_message">Finished loading %s</string>
     <string name="download_default_max">∞</string>
-    <string name="permission_rationale">The storage access is used to directly access your epubs, this will speed up the operation extremely</string>
-    <string name="permission_denied">We will use indirect access to your epubs, this will slow down the operation extremely</string>
+    <string name="permission_rationale">The storage access is used to directly access your epubs, this will speed up the
+        operation extremely
+    </string>
+    <string name="permission_denied">We will use indirect access to your epubs, this will slow down the operation
+        extremely
+    </string>
     <string name="list_action_title">Action:</string>
     <array name="list_actions">
         <item>Restart</item>
         <item>Un-new</item>
         <item>Delete</item>
     </array>
+    <string name="download_started_success">Scheduled download of "%s"</string>
 
     <!-- Services -->
-        <!-- Service Download -->
-        <string name="channel_name">Download progress</string>
-        <string name="channel_description">Shows the progress of running epub downloads.</string>
-        <string name="foreground_name">Download: %s</string>
-        <string name="foreground_text">%d/%s</string>
+    <!-- Service Download -->
+    <string name="channel_name">Download progress</string>
+    <string name="channel_description">Shows the progress of running epub downloads.</string>
+    <string name="foreground_name">Download: %s</string>
+    <string name="foreground_text">%d/%s</string>
 
-        <!-- Service UnNew -->
-        <string name="unnew_channel_name">UnNew progress</string>
-        <string name="unnew_channel_description">Shows the progress of the UnNew command.</string>
-        <string name="unnew_foreground_name">%s: %s</string>
+    <!-- Service UnNew -->
+    <string name="unnew_channel_name">UnNew progress</string>
+    <string name="unnew_channel_description">Shows the progress of the UnNew command.</string>
+    <string name="unnew_foreground_name">%s: %s</string>
 
 
     <!-- Preference Titles -->
@@ -36,10 +41,13 @@
     <string name="preference_general_is_adult_title">Support adult content</string>
     <string name="preference_general_is_adult_summary">Wether to allow download of adult content or not.</string>
     <string name="preference_general_choose_directory_title">Default directory</string>
-    <string name="preference_general_choose_directory_summary_default">Choose a directory where downloaded epubs will be saved to.</string>
+    <string name="preference_general_choose_directory_summary_default">Choose a directory where downloaded epubs will be
+        saved to.
+    </string>
     <string name="preference_general_choose_directory_summary">Downloaded epubs will be saved to %s.</string>
     <string name="preference_general_choose_src_directory_title">Default source directory</string>
-    <string name="preference_general_choose_src_directory_summary_default">Defaults to the same as "Default directory"</string>
+    <string name="preference_general_choose_src_directory_summary_default">Defaults to the same as "Default directory"
+    </string>
     <string name="preference_general_choose_src_directory_summary">Searching for update able epubs in %s.</string>
     <string name="preference_general_choose_src_directory_enabled_title">Use different source directory</string>
     <string name="preference_general_choose_src_directory_enabled_summary">it is especially useful if you save your
@@ -48,10 +56,14 @@
 
     <!-- Developer Preferences -->
     <string name="preference_debug_caching_title">Caching between restarts</string>
-    <string name="preference_debug_caching_summary_on" tools:ignore="TypographyDashes">Setting "--save-cache" is enabled.</string>
+    <string name="preference_debug_caching_summary_on" tools:ignore="TypographyDashes">Setting "--save-cache" is
+        enabled.
+    </string>
     <string name="preference_debug_caching_summary_off">Caching between restarts is disabled</string>
     <string name="preference_debug_personalini_title">Supply FanFicFare personal.ini</string>
-    <string name="preference_debug_personalini_summary">Caution: This may break the app.\nIt must be a functioning personal.ini file.</string>
+    <string name="preference_debug_personalini_summary">Caution: This may break the app.\nIt must be a functioning
+        personal.ini file.
+    </string>
     <string name="preference_debug_console_show_title">Show script output</string>
     <string name="preference_debug_console_show_summary">Show the console output of FanFicFare</string>
     <string name="preference_debug_cachesaf_title">Cache file lookup</string>

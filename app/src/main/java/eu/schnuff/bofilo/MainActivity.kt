@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
             if (item.finished)
                 storyListViewModel.setFinished(item, false)
             val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
-                putExtra(StoryDownloadService.PARAM_URL, item.url)
+                putExtra(Intent.EXTRA_TEXT, item.url)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)

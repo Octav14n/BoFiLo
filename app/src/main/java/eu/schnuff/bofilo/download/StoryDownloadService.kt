@@ -45,7 +45,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         if (intent == null)
             return
         // This is where the magic happens
-        val url = intent.getStringExtra(PARAM_URL) ?: throw InvalidParameterException("Starting StoryDownloadService must provide url '$PARAM_URL'.")
+        val url = intent.getStringExtra(Intent.EXTRA_TEXT) ?: throw InvalidParameterException("Starting StoryDownloadService must provide url.")
         startForeground(NOTIFICATION_ID, createNotification(null))
 
         if (!viewModel.has(url)) {
@@ -184,7 +184,6 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
 
     companion object {
-        const val PARAM_URL = "url"
         const val CHANNEL_ID = "StoryDownloadProgress"
         const val NOTIFICATION_ID = 3001
         var ActiveItem: StoryListItem? = null

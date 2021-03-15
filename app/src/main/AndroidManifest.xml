@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools" package="eu.schnuff.bofilo">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="eu.schnuff.bofilo">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -11,14 +12,26 @@
     <application
             android:name="com.chaquo.python.android.PyApplication"
             android:allowBackup="true"
+            android:fullBackupContent="@xml/backup_descriptor"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:requestLegacyExternalStorage="true" tools:targetApi="q"
+            android:requestLegacyExternalStorage="true"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
-            android:fullBackupContent="@xml/backup_descriptor">
+            tools:targetApi="q">
+        <activity android:name=".ShareUpdateActivity"
+                  android:theme="@style/Theme.NoView"
+                  android:launchMode="singleTask"
+                  android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
 
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
         <activity
                 android:name=".settings.SettingsActivity"
                 android:label="@string/title_activity_settings"
@@ -28,15 +41,19 @@
                     android:value="eu.schnuff.bofilo.MainActivity"/>
         </activity>
 
-        <service android:name=".download.StoryDownloadService"
-                 android:enabled="true"
-                 android:exported="false" />
-        <service android:name=".download.StoryUnNewService"
-                 android:enabled="true"
-                 android:exported="false" />
-        <service android:name=".download.StoryWriteService"
-                 android:enabled="true"
-                 android:exported="false" />
+        <service
+                android:name=".download.StoryDownloadService"
+                android:enabled="true"
+                android:exported="false">
+        </service>
+        <service
+                android:name=".download.StoryUnNewService"
+                android:enabled="true"
+                android:exported="false"/>
+        <service
+                android:name=".download.StoryWriteService"
+                android:enabled="true"
+                android:exported="false"/>
 
         <activity
                 android:name=".MainActivity"
@@ -48,13 +65,6 @@
                 <action android:name="android.intent.action.VIEW"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
-
-                <category android:name="android.intent.category.DEFAULT"/>
-
-                <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
     </application>
