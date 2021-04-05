@@ -16,6 +16,8 @@ jobs:
         java-version: 1.8
     - name: Make Gradle executable
       run: chmod +x ./gradlew
+    - name: Add local.properties
+      run: echo "chaquopy.license="${{ secrets.CHAQUOPY_LICENSE }} > local.properties
     - name: Build with Gradle
       run: ./gradlew build
     - name: Build Debug APK
