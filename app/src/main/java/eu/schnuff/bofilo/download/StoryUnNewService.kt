@@ -49,7 +49,7 @@ class StoryUnNewService : Service() {
                 py.getModule("os").callAttr("chdir", cacheDir.absolutePath)
                 val helper = py.getModule("helper")
                 helper.callAttr("unnew", cache.absolutePath)
-                helper.close()
+                //helper.close()
 
                 // copy back
                 contentResolver.copyFile(cache.toUri(), original.uri)
@@ -110,7 +110,7 @@ class StoryUnNewService : Service() {
             val intent = Intent(context, StoryUnNewService::class.java).apply {
                 putExtra(EXTRA_PARAM_URI, uri.toString())
             }
-            if (IS_FOREGROUND)
+            if (IS_FOREGROUND && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 context.startForegroundService(intent)
             else
                 context.startService(intent)

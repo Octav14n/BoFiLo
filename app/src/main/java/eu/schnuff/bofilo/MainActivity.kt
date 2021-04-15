@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                 show()
             }
         }
-        storyListViewModel.allItems.observe(this, {
+        storyListViewModel.allItems.observe(this) {
             if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
                 for (item in it) {
@@ -71,12 +71,12 @@ class MainActivity : AppCompatActivity() {
                 initializedOldDownloads = true
             }
             adapter.setAll(it)
-        })
+        }
         binding.storyList.adapter = adapter
         (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         // Initiate console
-        storyListViewModel.consoleOutput.observe(this, {
+        storyListViewModel.consoleOutput.observe(this) {
             // Test if console shall be shown
             if (settings.showConsole) {
                 if (it == "") {
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                     binding.consoleOutputScroll.visibility = View.VISIBLE
                 }
             }
-        })
+        }
         binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
             binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
         }
