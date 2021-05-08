@@ -4,6 +4,7 @@ import android.app.*
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -40,7 +41,11 @@ class StoryWriteService : Service() {
         thread {
             super.onStartCommand(intent, flags, startId)
             val srcUri = intent.getStringExtra(EXTRA_PARAM_SRC_URI)?.toUri() ?: throw IllegalStateException("No SRC uri provided.")
-            startForeground(startId, createNotification(srcUri))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(startId, createNotification(srcUri), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            } else {
+                startForeground(startId, createNotification(srcUri))
+            }
 
             val dstUri = if (intent.hasExtra(EXTRA_PARAM_DST_URI))
                  intent.getStringExtra(EXTRA_PARAM_DST_URI)?.toUri() ?: throw IllegalStateException("No destination uri provided.")
@@ -92,7 +97,7 @@ class StoryWriteService : Service() {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_unnew)
             .setContentTitle(getString(R.string.story_write_foreground_name).format(uri.lastPathSegment))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
 
@@ -122,7 +127,11 @@ class StoryWriteService : Service() {
                 putExtra(EXTRA_PARAM_SRC_URI, srcUri.toString())
                 putExtra(EXTRA_PARAM_DST_URI, dstUri.toString())
             }
-            context.startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
 
         fun start(context: Context, item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
@@ -133,7 +142,11 @@ class StoryWriteService : Service() {
                 putExtra(EXTRA_PARAM_DST_FILE_NAME, dstFileName)
                 putExtra(EXTRA_PARAM_DST_MIME_TYPE, dstMimeType)
             }
-            context.startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
     }
 }

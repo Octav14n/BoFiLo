@@ -11,6 +11,8 @@ import eu.schnuff.bofilo.persistence.AppDatabase
 import eu.schnuff.bofilo.persistence.filewrappercache.FileWrapperCacheItem
 import kotlin.concurrent.thread
 
+const val UPDATE_CACHE_ON_ERROR_INTERVAL = 25000L
+
 class DocumentFileWrapper(
     private val context: Context,
     private val file: DocumentFile
@@ -37,7 +39,10 @@ class DocumentFileWrapper(
                 }
             } catch (e: Throwable) {
                 Log.d(this::class.simpleName, "Failed creating file: %s [mime-type: %s]".format(filename, mimeType), e)
-                getChild(filename, useCaching = false)
+                if (last_cache_updated < System.currentTimeMillis() + UPDATE_CACHE_ON_ERROR_INTERVAL) {
+                    last_cache_updated = System.currentTimeMillis()
+                    getChild(filename, useCaching = false)
+                } else null
             }
         }
         return f
@@ -138,5 +143,9 @@ class DocumentFileWrapper(
         })
 
         childCache = new
+    }
+
+    companion object {
+        private var last_cache_updated = 0L
     }
 }

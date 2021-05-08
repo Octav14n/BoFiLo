@@ -53,7 +53,8 @@
         <service
                 android:name=".download.StoryWriteService"
                 android:enabled="true"
-                android:exported="false"/>
+                android:exported="false"
+                android:foregroundServiceType="dataSync"/>
 
         <activity
                 android:name=".MainActivity"
