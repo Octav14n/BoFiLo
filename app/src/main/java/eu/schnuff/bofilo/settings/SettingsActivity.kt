@@ -4,9 +4,13 @@ import android.Manifest
 import android.content.ContentResolver
 import android.content.Intent
 import android.content.SharedPreferences
+import android.icu.number.NumberFormatter.with
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -16,7 +20,9 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.gun0912.tedpermission.PermissionListener
-import com.gun0912.tedpermission.TedPermission
+import com.gun0912.tedpermission.TedPermissionUtil
+import com.gun0912.tedpermission.normal.TedPermission
+//import com.gun0912.tedpermission.TedPermissionUtil
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.Helpers
 import eu.schnuff.bofilo.Helpers.copyFile
@@ -45,7 +51,7 @@ class SettingsActivity : AppCompatActivity() {
         private val personaliniPreference: Preference
             get() = findPreference(Constants.PREF_PERSONALINI)!!
         private val sharedPreferences: SharedPreferences
-            get() = PreferenceManager.getDefaultSharedPreferences(context!!.applicationContext)
+            get() = PreferenceManager.getDefaultSharedPreferences(requireContext().applicationContext)
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             // Replace content with the settings configured in root_preferences.xml
@@ -74,6 +80,10 @@ class SettingsActivity : AppCompatActivity() {
             personaliniPreference.setOnPreferenceClickListener {
                 val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
+                    putExtra(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        DocumentsContract.EXTRA_INITIAL_URI else "android.provider.extra.INITIAL_URI",
+                        MediaStore.Files.getContentUri("external"))
+                        
                     type = Constants.MIME_INI
                 }
 
@@ -111,11 +121,11 @@ class SettingsActivity : AppCompatActivity() {
                     }
 
                     // I have no idea where the file is on the filesystem (if it is even there and not in the cloud)
-                    DocumentFile.fromTreeUri(context!!.applicationContext, uri)?.let {
+                    DocumentFile.fromTreeUri(requireContext().applicationContext, uri)?.let {
                         // Make access to the "default directory" permanent
                         val takeFlags: Int = data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION
                                 or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        val resolver: ContentResolver = context!!.contentResolver
+                        val resolver: ContentResolver = requireContext().contentResolver
                         resolver.takePersistableUriPermission(data.data!!, takeFlags)
 
 
@@ -127,13 +137,13 @@ class SettingsActivity : AppCompatActivity() {
                         setSummary()
                     }
 
-                    val externPath = Helpers.FileInformation.getPath(context!!, uri)
+                    val externPath = Helpers.FileInformation.getPath(requireContext(), uri)
                     if (externPath != null) {
                         // I found the file on the filesystem.
                         // request permission to access it.
                         Log.d(TAG, "Extern path found, now requesting permissions.")
-                        TedPermission
-                            .with(context!!)
+                        TedPermission.create()
+                            //.with(requireContext())
                             .setPermissionListener(object : PermissionListener {
                                 override fun onPermissionGranted() {
                                     sharedPreferences.edit(true) {
@@ -149,7 +159,7 @@ class SettingsActivity : AppCompatActivity() {
                             .setDeniedMessage(R.string.permission_denied)
                             .setPermissions(
                                 Manifest.permission.READ_EXTERNAL_STORAGE,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
                             ).check()
                     }
                 }
