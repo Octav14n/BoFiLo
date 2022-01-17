@@ -5,11 +5,13 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.MainActivity
@@ -68,7 +70,25 @@ class StoryWriteService : Service() {
             startForeground(startId, createNotification(srcUri))
             Log.d(this::class.simpleName, "Now writing to %s".format(dstUri))
 
-            contentResolver.copyFile(srcUri, dstUri)
+            while (true) {
+                try {
+                    contentResolver.copyFile(srcUri, dstUri)
+                    MediaScannerConnection.scanFile(
+                        applicationContext,
+                        arrayOf(dstUri.toFile().absolutePath),
+                        arrayOf(null),
+                        null
+                    )
+                    /*sendBroadcast(
+                        Intent(
+                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, dstUri
+                        )
+                    )*/
+                    break
+                } catch (e: Exception) {
+                    Log.e(this::class.simpleName, "Could not write to destination.", e)
+                }
+            }
             if (srcUri.scheme == ContentResolver.SCHEME_FILE) {
                 Log.d(this::class.simpleName, "Now deleting $srcUri .")
                 srcUri.path?.let {

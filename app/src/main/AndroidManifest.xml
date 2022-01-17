@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage"/>
 
     <application
             android:name="com.chaquo.python.android.PyApplication"
@@ -23,11 +24,12 @@
         <activity android:name=".ShareUpdateActivity"
                   android:theme="@style/Theme.NoView"
                   android:launchMode="singleTask"
-                  android:noHistory="true">
+                  android:noHistory="true"
+                  android:exported="true">
             <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.MAIN"/>
                 <action android:name="android.intent.action.SEND"/>
-                <category android:name="android.intent.category.DEFAULT"/>
 
                 <data android:mimeType="text/plain"/>
             </intent-filter>
@@ -35,7 +37,8 @@
         <activity
                 android:name=".settings.SettingsActivity"
                 android:label="@string/title_activity_settings"
-                android:parentActivityName=".MainActivity">
+                android:parentActivityName=".MainActivity"
+                android:exported="true">
             <meta-data
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="eu.schnuff.bofilo.MainActivity"/>
@@ -50,6 +53,17 @@
                 android:name=".download.StoryUnNewService"
                 android:enabled="true"
                 android:exported="false"/>
+        <activity android:name=".ShareUnNewActivity"
+                  android:theme="@style/Theme.NoView"
+                  android:launchMode="singleTask"
+                  android:noHistory="true"
+                  android:exported="true">
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.MAIN"/>
+                <action android:name="eu.schnuff.bofilo.action.unnew"/>
+            </intent-filter>
+        </activity>
         <service
                 android:name=".download.StoryWriteService"
                 android:enabled="true"
@@ -60,7 +74,8 @@
                 android:name=".MainActivity"
                 android:label="@string/app_name"
                 android:launchMode="singleTask"
-                android:theme="@style/AppTheme.NoActionBar">
+                android:theme="@style/AppTheme.NoActionBar"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="android.intent.action.VIEW"/>

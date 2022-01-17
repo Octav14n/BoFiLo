@@ -22,6 +22,7 @@ class MyStdOut:
 sys.stdout = MyStdOut(sys.stdout)
 sys.stderr = MyStdOut(sys.stderr, "\nError: ")
 
+import fanficfare.fetcher
 import fanficfare.cli
 import os
 import threading
@@ -64,6 +65,10 @@ class Handler:
 
     def get_login(self, password_only: bool = False):
         raise ValueError('no [password, username] supplied.')
+
+    def web_request(self, method, url, **kargs):
+        print('can not perform web request "%s" for url "%s", args: ' % (method, url), kargs)
+        raise NotImplementedError('can not perform web request "%s" for url "%s" [args: %s]' % (method, url, str(kargs)))
 
     def is_adult(self):
         return False
@@ -154,9 +159,32 @@ class MyAdapter(object):
         return getattr(self.adapter, attr)
 
 
+class MyFetcher(fanficfare.fetcher.Fetcher):
+    def __init__(self, get_config_fn, get_config_list_fn):
+        super(MyFetcher, self).__init__(get_config_fn, get_config_list_fn)
+        self.handler = get_handler()
+
+    def request(self, *args, **kargs):
+        print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
+        self.handler.web_request(args[0], args[1], **kargs)
+
+    def __setattr__(self, key, value):
+        print("Fetcher setattr fetcher.%s = %s" % (str(key), str(value)))
+        super(MyFetcher, self).__setattr__(key, value)
+
+    def __getattr__(self, attr):
+        print('Fetcher getattr fetcher.%s' % attr)
+        # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
+        # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
+        return getattr(super(MyFetcher, self), attr)
+
+
 # This function wraps the adapter and story
 def my_get_adapter(config, url, anyurl=False):
     adapter = originalGetAdapter(config, url, anyurl)
+    #if adapter.getSiteDomain() == 'www.fanfiction.net':
+    #    print("Site is FanFiction.net, injecting custom fetcher.")
+    #    config.fetcher = MyFetcher(config.getConfig, config.getConfigList)
     if get_handler():
         get_handler().start(adapter.url)
     adapter.story = MyStory(adapter.story)
@@ -175,7 +203,7 @@ def get_handler() -> Handler:
 
 def start(my_handler, url, save_cache=False):
     # set Kotlin-Service interface
-    handlers[threading.get_ident()] = my_handler
+    handlers[threading.get_ident()] = my_handler if my_handler is not None else Handler(url)
     # modify FanFicFare to inject custom code
     fanficfare.cli.adapters.getAdapter = my_get_adapter
     # print("Now starting Story with url '%s'." % url)
@@ -211,4 +239,7 @@ def unnew(filepath):
 
 
 if __name__ == "__main__":
-    start(None, 'https://www.fanfiction.net/s/2318355/1/Make-A-Wish', True)
+    from os.path import expanduser
+    read_personal_ini(expanduser('~/.fanficfare/personal.ini'))
+    # start(None, 'https://fictionhunt.com/stories/b8kmkn3/the-champion-reading-i', False)
+    start(None, 'https://www.fanfiction.net/s/12302907/5/Si-Vis-Pacem-Para-Bellum', False)

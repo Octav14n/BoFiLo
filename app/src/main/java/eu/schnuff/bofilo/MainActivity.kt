@@ -4,8 +4,12 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -31,10 +35,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Handle potential new download request
+        if (intent != null) {
+            onNewIntent(intent)
+            if (isFinishing)
+                return
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()) {
+            //todo when permission is granted
+        } else {
+            //request for the permission
+            val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            intent.data = Uri.fromParts("package", packageName, null)
+            startActivity(intent)
+        }
+
         // Initiate View
         binding = ActivityMainBinding.inflate(layoutInflater)
         settings = Settings(this)
-        super.onCreate(savedInstanceState)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
 
@@ -106,21 +126,23 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Downloads scheduled.", Snackbar.LENGTH_SHORT).show()
                     //.setAction("Action", null)
         }
-
-        // Handle potential new download request
-        if (intent != null)
-            onNewIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         // Handle potential new download request
+        Log.d(this::class.simpleName, "Got new intent: %s --> %s".format(intent.action, intent.extras.toString()))
         super.onNewIntent(intent)
 
-        if (intent.action == Intent.ACTION_SEND) {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let {
-                scheduleDownload(it)
-            }
+        val extra = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+
+        when (intent.action) {
+            Intent.ACTION_SEND -> ShareUpdateActivity.scheduleDownload(this, extra)
+            ShareUnNewActivity.INTENT -> ShareUnNewActivity.unNewStory(this, extra.toUri())
+            else -> Log.w(this::class.simpleName, "Intent is not supported: " + intent.action)
         }
+
+        finish()
+        //moveTaskToBack(true)
     }
 
     private fun scheduleDownload(url: String) {

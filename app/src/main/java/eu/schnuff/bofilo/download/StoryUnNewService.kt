@@ -15,6 +15,7 @@ import com.chaquo.python.Python
 import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
+import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import java.io.File
 import java.io.FileNotFoundException
 import kotlin.concurrent.thread
@@ -32,8 +33,8 @@ class StoryUnNewService : Service() {
                 ?: throw IllegalStateException("No $EXTRA_PARAM_URI provided.")
 
             val original =
-                DocumentFile.fromSingleUri(this, itemUri) ?: throw FileNotFoundException("Original file not found.")
-            val originalName = original.name!!
+                FileWrapper.fromUri(this, itemUri)
+            val originalName = original.name
             val cache = File(cacheDir, originalName)
             if (IS_FOREGROUND)
                 startForeground(startId, createNotification(originalName, "started"))
