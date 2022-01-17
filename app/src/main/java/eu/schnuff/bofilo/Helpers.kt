@@ -29,7 +29,12 @@ object Helpers {
             (outputStream as? FileOutputStream)?.channel?.truncate(0)
             val output = outputStream.buffered()
 
-            input.copyTo(output)
+            while (input.available() == 0) {
+                Thread.sleep(25)
+            }
+            while (input.available() > 0) {
+                input.copyTo(output)
+            }
 
             input.close()
             output.close()
