@@ -24,6 +24,7 @@ class StoryDownloadHelper(
     private val isAdult: Boolean,
     private val isSaveCache: Boolean,
     private val fileInteraction: FileInteraction,
+    private val webRequest: StoryDownloadWebRequest,
     item: StoryListItem
 ) {
     var item = item
@@ -138,6 +139,13 @@ class StoryDownloadHelper(
         viewModel.setTitle(item, value)
         notifyProgress()
     }
+    // If the script requests a website-quell-code this function gets called
+    @SuppressWarnings("unused")
+    fun web_request(method: String, url: String, kargs: PyObject): String {
+        return webRequest.webRequest(method, url)
+        // Log.i(this::class.simpleName, "got return for url $url:\n\n$ret")
+    }
+
     fun filename(value: String) { this.filename = value }
     // Gets called by the script if the requested site needs login information
     @SuppressWarnings("unused")

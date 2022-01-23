@@ -165,15 +165,21 @@ class MyFetcher(fanficfare.fetcher.Fetcher):
         self.handler = get_handler()
 
     def request(self, *args, **kargs):
-        print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
-        self.handler.web_request(args[0], args[1], **kargs)
+        # print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
+        ret = fanficfare.fetcher.FetcherResponse(
+            self.handler.web_request(args[0], args[1], kargs),
+            args[0],
+            False
+        )
+        # print(ret.content)
+        return ret
 
     def __setattr__(self, key, value):
-        print("Fetcher setattr fetcher.%s = %s" % (str(key), str(value)))
+        # print("Fetcher setattr fetcher.%s = %s" % (str(key), str(value)))
         super(MyFetcher, self).__setattr__(key, value)
 
     def __getattr__(self, attr):
-        print('Fetcher getattr fetcher.%s' % attr)
+        # print('Fetcher getattr fetcher.%s' % attr)
         # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
         # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
         return getattr(super(MyFetcher, self), attr)
@@ -182,9 +188,9 @@ class MyFetcher(fanficfare.fetcher.Fetcher):
 # This function wraps the adapter and story
 def my_get_adapter(config, url, anyurl=False):
     adapter = originalGetAdapter(config, url, anyurl)
-    #if adapter.getSiteDomain() == 'www.fanfiction.net':
-    #    print("Site is FanFiction.net, injecting custom fetcher.")
-    #    config.fetcher = MyFetcher(config.getConfig, config.getConfigList)
+    if adapter.getSiteDomain() == 'www.fanfiction.net':
+        print("Site is FanFiction.net, injecting custom fetcher.")
+        config.fetcher = MyFetcher(config.getConfig, config.getConfigList)
     if get_handler():
         get_handler().start(adapter.url)
     adapter.story = MyStory(adapter.story)
