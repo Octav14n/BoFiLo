@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_DEFERRED
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import eu.schnuff.bofilo.Helpers.copyFile
@@ -118,6 +119,9 @@ class StoryWriteService : Service() {
             .setSmallIcon(R.drawable.ic_notification_unnew)
             .setContentTitle(getString(R.string.story_write_foreground_name).format(uri.lastPathSegment))
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .apply {
+                foregroundServiceBehavior = FOREGROUND_SERVICE_DEFERRED
+            }
             // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
 

@@ -83,6 +83,9 @@ class StoryUnNewService : Service() {
             .setSmallIcon(R.drawable.ic_notification_unnew)
             .setContentTitle(getString(R.string.unnew_foreground_name).format(filename, status))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .apply {
+                foregroundServiceBehavior = Notification.FOREGROUND_SERVICE_DEFERRED
+            }
             // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
 
