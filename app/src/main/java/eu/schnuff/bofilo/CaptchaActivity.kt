@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import eu.schnuff.bofilo.download.StoryDownloadService
 
 
@@ -31,9 +32,13 @@ class CaptchaActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_captcha)
         webView = findViewById(R.id.captchaWebView)
+        webView.webViewClient = WebViewClient()
         webView.settings.javaScriptEnabled = true
 
         bindService(Intent(this, StoryDownloadService::class.java), connection, Context.BIND_AUTO_CREATE)
+
+        if (intent != null)
+            onNewIntent(intent)
     }
 
     override fun onStop() {

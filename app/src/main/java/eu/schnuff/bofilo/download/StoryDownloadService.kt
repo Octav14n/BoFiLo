@@ -167,7 +167,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         }
     }
 
-    private fun createNotification(item: StoryListItem?, msg: String? = null): Notification {
+    private fun createNotification(item: StoryListItem?): Notification {
         createNotificationChannel()
         // Create an explicit intent for the Main Activity in your app
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -176,7 +176,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_download)
-            .setContentTitle(msg ?: getString(R.string.foreground_name).format(item?.title ?: item?.url ?: "..."))
+            .setContentTitle(getString(R.string.foreground_name).format(item?.title ?: item?.url ?: "..."))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
@@ -319,14 +319,14 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
                     ).apply {
                         putExtra(CaptchaActivity.INTENT_EXTRA_URL, url)
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }, Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }, PendingIntent.FLAG_UPDATE_CURRENT
                 )
-
 
                 startForeground(
                     NOTIFICATION_ID,
                     NotificationCompat.Builder(this, CHANNEL_INTERACTION_ID)
                         .setContentTitle("Captcha")
+                        .setSmallIcon(R.drawable.ic_notification_download)
                         .apply {
                             foregroundServiceBehavior = Notification.FOREGROUND_SERVICE_IMMEDIATE
                         }
