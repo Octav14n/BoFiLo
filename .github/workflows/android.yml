@@ -6,25 +6,49 @@ on:
    - master
    
 jobs:
-  build:
+  apk:
+    name: Generate APK
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: set up JDK 8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 8
-    - name: Make Gradle executable
-      run: chmod +x ./gradlew
-    - name: Add local.properties
-      run: echo "chaquopy.license="${{ secrets.CHAQUOPY_LICENSE }} > local.properties
-    - name: Build with Gradle
-      run: ./gradlew build
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug
-    - name: Releasing using Hub
-      uses: ShaunLWM/action-release-debugapk@master
-      env:
-       GITHUB_TOKEN: ${{ secrets.TOKEN }}
-       APP_FOLDER: app
-       RELEASE_TITLE: New Build
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Add local.properties
+        run: echo "chaquopy.license="${{ secrets.CHAQUOPY_LICENSE }} > local.properties
+      - name: Build APK
+        run: bash ./gradlew assembleDebug --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v1
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+  release:
+    name: Release APK
+    needs: apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK from build
+        uses: actions/download-artifact@v1
+        with:
+          name: apk
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          release_name: PreRelease
+          tag_name: ${{ github.ref }}Pre
+          prerelease: true
+      - name: Upload Release APK
+        id: upload_release_asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          files: apk/app-debug.apk
+          prerelease: true
+          generate_release_notes: true
