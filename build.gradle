@@ -1,16 +1,16 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.5.31'
+    ext.kotlin_version = '1.6.10'
     repositories {
         google()
         mavenCentral()
         maven { url "https://chaquo.com/maven" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0'
+        classpath 'com.android.tools.build:gradle:7.0.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.chaquo.python:gradle:9.1.0"
+        classpath "com.chaquo.python:gradle:10.0.1"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -28,9 +28,9 @@ task clean(type: Delete) {
 }
 
 ext {
-    roomVersion = '2.3.0'
+    roomVersion = '2.4.1'
     archLifecycleVersion = '2.4.0'
     androidxArchVersion = '2.1.0'
     coreTestingVersion = "2.1.0"
-    materialVersion = "1.4.0"
+    materialVersion = "1.5.0"
 }
