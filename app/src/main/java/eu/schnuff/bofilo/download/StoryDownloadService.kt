@@ -304,8 +304,8 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             }
         }*/
         while (true) {
-            val ret = queue.take()
-            if (ret.isEmpty()) {
+            val ret = queue.poll(1, TimeUnit.SECONDS)
+            if (ret.isNullOrEmpty()) {
                 handler.sendEmptyMessage(0)
             } else if (ret.contains("| FanFiction</title>") || ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>")) {
                 handler.sendEmptyMessage(1)
