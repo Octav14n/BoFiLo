@@ -34,6 +34,10 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: apk
+      - name: Generate release tag
+        id: tag
+        run: |
+          echo "::set-output name=release_tag::CIBuild_$(date +"%Y.%m.%d_%H-%M")"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -41,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           release_name: PreRelease
-          tag_name: ${{ github.ref }}Pre
+          tag_name: ${{ steps.tag.outputs.release_tag }}
           prerelease: true
       - name: Upload Release APK
         id: upload_release_asset
