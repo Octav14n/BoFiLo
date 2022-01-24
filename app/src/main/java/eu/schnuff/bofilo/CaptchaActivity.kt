@@ -36,12 +36,12 @@ class CaptchaActivity : AppCompatActivity() {
         
         webView.settings.apply {
             javaScriptEnabled = true
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    setSupportZoom(true)
-                    builtInZoomControls = true
-                    userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-                }
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            setSupportZoom(true)
+            builtInZoomControls = true
+            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+        }
 
         bindService(Intent(this, StoryDownloadService::class.java), connection, Context.BIND_AUTO_CREATE)
 
