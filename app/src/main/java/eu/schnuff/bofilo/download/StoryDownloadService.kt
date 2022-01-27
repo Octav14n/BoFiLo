@@ -3,14 +3,14 @@ package eu.schnuff.bofilo.download
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.*
 import android.util.Log
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.view.ViewGroup
+import android.webkit.*
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.room.util.StringUtil
 import com.chaquo.python.Python
 import eu.schnuff.bofilo.CaptchaActivity
 import eu.schnuff.bofilo.Helpers.copyFile
@@ -24,8 +24,6 @@ import org.apache.commons.text.StringEscapeUtils
 import java.io.File
 import java.security.InvalidParameterException
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import java.util.concurrent.TimeUnit
 
 const val SCRIPT = """
@@ -44,6 +42,9 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     //private val doneDir = File(cacheDir.absolutePath + "/done")
     private var privateIniModified = 0L
     val queue = LinkedBlockingQueue<String>(1)
+
+    lateinit var webView: WebView
+    var isWebViewInitialized = false
 
     override fun onCreate() {
         super.onCreate()
@@ -234,61 +235,106 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         const val TAG = "download" // Debug TAG
     }
 
+    fun initWebView() {
+        webView = WebView(this@StoryDownloadService)
+        //view.isDrawingCacheEnabled = true
+        //view.measure(640, 480)
+        //view.layout(0, 0, 640, 480)
+        webView.settings.apply {
+            javaScriptEnabled = true
+            useWideViewPort = true
+            //loadWithOverviewMode = true
+            //setSupportZoom(true)
+            //builtInZoomControls = true
+            // loadsImagesAutomatically = false
+            //blockNetworkLoads = true
+            //cacheMode = WebSettings.LOAD_NO_CACHE
+            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(
+                view: WebView?,
+                errorCode: Int,
+                description: String,
+                failingUrl: String
+            ) {
+                Log.w(TAG, "Recieved error from WebView, description: $description, Failing url: $failingUrl")
+                //without this method, your app may crash...
+            }
+
+//            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+//                super.onPageStarted(view, url, favicon)
+//                Log.i("WebView", "PageStarted $url")
+//                view.evaluateJavascript(SCRIPT) {
+//                    val test = StringEscapeUtils.unescapeJava(it)
+//                    if (!it.isNullOrBlank() && it != "null") {
+//                        queue.put(test)
+//                    }
+//                }
+//            }
+
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                Log.i("WebView", "PageFinished $url")
+                view.evaluateJavascript(SCRIPT) {
+                    queue.put(StringEscapeUtils.unescapeJava(it))
+                }
+            }
+        }
+
+//        webView.webChromeClient = object: WebChromeClient() {
+//            override fun onProgressChanged(view: WebView, newProgress: Int) {
+//                super.onProgressChanged(view, newProgress)
+//                Log.i("WebView", "PageProgress $newProgress")
+//
+//                if (newProgress > 99) {
+//                    view.evaluateJavascript(SCRIPT) {
+//                        val tmp = StringEscapeUtils.unescapeJava(it)
+//                        queue.put(tmp)
+//                    }
+//                }
+//            }
+//        }
+    }
+
     override fun webRequest(method: String, url: String): String {
         //val thread = HandlerThread("webRequestHandler", THREAD_PRIORITY_BACKGROUND)
         //thread.start()
         queue.clear()
 
         val handler = object : Handler(mainLooper) {
-            lateinit var view: WebView
-
             override fun handleMessage(msg: Message) {
-                if (msg.what == 1) {
-                    view.onPause()
-                    view.destroyDrawingCache()
-                    view.pauseTimers()
-                    view.removeAllViews()
-                    view.destroy()
-                    return
-                }
-
                 super.handleMessage(msg)
+                if (!isWebViewInitialized)
+                    initWebView()
 
-                view = WebView(this@StoryDownloadService)
-                //view.isDrawingCacheEnabled = true
-                //view.measure(640, 480)
-                //view.layout(0, 0, 640, 480)
-                view.settings.apply {
-                    javaScriptEnabled = true
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    setSupportZoom(true)
-                    builtInZoomControls = true
-                    userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-                }
-
-                view.webViewClient = object : WebViewClient() {
-                    override fun onReceivedError(
-                        view: WebView?,
-                        errorCode: Int,
-                        description: String,
-                        failingUrl: String
-                    ) {
-                        Log.w(TAG, "Recieved error from WebView, description: $description, Failing url: $failingUrl")
-                        //without this method, your app may crash...
-                    }
-
-                    override fun onPageFinished(view: WebView, url: String) {
-                        super.onPageFinished(view, url)
-                        view.evaluateJavascript(SCRIPT) {
-                            queue.put(StringEscapeUtils.unescapeJava(it))
-                        }
+                when (msg.what) {
+                    2 -> {
+                        webView.clearCache(true)
+                        webView.clearHistory()
                     }
                 }
+//                if (msg.what == 1) {
+//                    webView.onPause()
+//                    webView.destroyDrawingCache()
+//                    webView.pauseTimers()
+//                    webView.removeAllViews()
+//                    webView.destroy()
+//                    return
+//                }
 
                 when (method) {
                     "GET" -> {
-                        view.loadUrl(url)
+                        webView.loadUrl(url)
+//                        if (url == webView.url) {
+//                            webView.evaluateJavascript(SCRIPT) {
+//                                queue.put(StringEscapeUtils.unescapeJava(it))
+//                            }
+//                            webView.reload()
+//                        } else {
+//                            webView.loadUrl(url)
+//                        }
                     }
                 }
             }
@@ -305,11 +351,13 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             }
         }*/
         while (true) {
-            val ret = queue.poll(60, TimeUnit.SECONDS)
+            val ret = queue.poll(120, TimeUnit.SECONDS)
             if (ret.isNullOrEmpty()) {
-                handler.sendEmptyMessage(0)
+                CookieManager.getInstance().removeAllCookies(null)
+                CookieManager.getInstance().flush()
+                handler.sendEmptyMessage(2)
             } else if (ret.contains("| FanFiction</title>") || ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>")) {
-                handler.sendEmptyMessage(1)
+                // handler.sendEmptyMessage(1)
                 return ret
             } else if (ret.contains("<meta http-equiv=\"refresh\"")) {
                 // Do nothing, site will reload by itself.

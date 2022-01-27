@@ -190,6 +190,7 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
             R.id.action_reset -> { storyListViewModel.removeAll(); true }
+            R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
             else -> super.onOptionsItemSelected(item)
         }
     }
