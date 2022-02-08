@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "webextension",
+  "version": "1.0",
+  "description": "Detect Captcha and Extract innerHTML from webpages.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "webextension@bofilo.schnuff.eu"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.fanfiction.net/*"],
+      "js": ["main.js"]
+    }
+  ],
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons"
+  ]
+}

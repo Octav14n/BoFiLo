@@ -14,19 +14,21 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import eu.schnuff.bofilo.download.StoryDownloadService
+import org.mozilla.geckoview.GeckoView
 
 
 class CaptchaActivity : AppCompatActivity() {
     private lateinit var mainView: LinearLayout
     private var service: StoryDownloadService? = null
-    private var webView: WebView? = null
+    private lateinit var webView: GeckoView
     private val connection = object: ServiceConnection {
         @SuppressLint("SetJavaScriptEnabled")
         override fun onServiceConnected(p0: ComponentName, p1: IBinder) {
             val binder = p1 as StoryDownloadService.StoryDownloadBinder
             service = binder.Service
-
-            webView = service!!.webView
+            service?.run {
+                webView.setSession(geckoSession)
+            }
             /*webView!!.run {
                 settings.apply {
                     javaScriptEnabled = true
@@ -38,7 +40,7 @@ class CaptchaActivity : AppCompatActivity() {
                 }
                 mainView.addView(this)
             }*/
-            webView?.run {
+            webView.run {
                 mainView.addView(this)
                 layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             }
@@ -53,6 +55,7 @@ class CaptchaActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        webView = GeckoView(this)
         setContentView(R.layout.activity_captcha)
         mainView = findViewById(R.id.captchaMain)
 
@@ -68,10 +71,10 @@ class CaptchaActivity : AppCompatActivity() {
         unbindService(connection)
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        webView?.loadUrl(intent.getStringExtra(INTENT_EXTRA_URL)!!)
-    }
+//    override fun onNewIntent(intent: Intent) {
+//        super.onNewIntent(intent)
+//        webView?.loadUrl(intent.getStringExtra(INTENT_EXTRA_URL)!!)
+//    }
 
     companion object {
         const val INTENT_EXTRA_URL = "url"

@@ -21,6 +21,8 @@ import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
 import org.apache.commons.text.StringEscapeUtils
+import org.json.JSONObject
+import org.mozilla.geckoview.*
 import java.io.File
 import java.security.InvalidParameterException
 import java.util.concurrent.LinkedBlockingQueue
@@ -43,7 +45,9 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     private var privateIniModified = 0L
     val queue = LinkedBlockingQueue<String>(1)
 
-    lateinit var webView: WebView
+    //lateinit var geckoView: GeckoView
+    lateinit var geckoSession: GeckoSession
+    lateinit var geckoRuntime: GeckoRuntime
     var isWebViewInitialized = false
 
     override fun onCreate() {
@@ -236,53 +240,95 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     }
 
     fun initWebView() {
-        webView = WebView(this@StoryDownloadService)
-        //view.isDrawingCacheEnabled = true
-        //view.measure(640, 480)
-        //view.layout(0, 0, 640, 480)
-        webView.settings.apply {
-            javaScriptEnabled = true
-            useWideViewPort = true
-            //loadWithOverviewMode = true
-            //setSupportZoom(true)
-            //builtInZoomControls = true
-            // loadsImagesAutomatically = false
-            //blockNetworkLoads = true
-            //cacheMode = WebSettings.LOAD_NO_CACHE
-            userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+        //geckoView = GeckoView(this)
+        geckoSession = GeckoSession()
+        geckoSession.settings.apply {
+            allowJavascript = true
+            userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+            // userAgentOverride = Settings(this@StoryDownloadService).webViewUserAgent
+        }
+        geckoRuntime = GeckoRuntime.create(this)
+
+        val messageDelegate = object : WebExtension.MessageDelegate {
+            override fun onMessage(
+                nativeApp: String,
+                message: Any,
+                sender: WebExtension.MessageSender
+            ): GeckoResult<Any>? {
+                val json = message as JSONObject
+                if (!json.has("type"))
+                    return null
+
+                when (json.getString("type")) {
+                    "webpage" -> queue.put(json.getString("innerHTML"))
+                }
+
+                return null
+            }
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun onReceivedError(
-                view: WebView?,
-                errorCode: Int,
-                description: String,
-                failingUrl: String
-            ) {
-                Log.w(TAG, "Recieved error from WebView, description: $description, Failing url: $failingUrl")
-                //without this method, your app may crash...
-            }
+        geckoRuntime.apply {
+            webExtensionController
+                .ensureBuiltIn("resource://android/assets/webextension/", "webextension@bofilo.schnuff.eu")
+                .accept(
+                    { extension ->
+                        geckoSession.webExtensionController.setMessageDelegate(extension!!, messageDelegate, "browser")
+                    },
+                    { e -> Log.e("MessageDelegate", "Error registering WebExtension", e) }
+                )
+        }
+        geckoSession.open(geckoRuntime)
 
-//            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-//                super.onPageStarted(view, url, favicon)
-//                Log.i("WebView", "PageStarted $url")
+        isWebViewInitialized = true
+        //geckoView.setSession(geckoSession)
+
+//        webView = WebView(this@StoryDownloadService)
+//        //view.isDrawingCacheEnabled = true
+//        //view.measure(640, 480)
+//        //view.layout(0, 0, 640, 480)
+//        webView.settings.apply {
+//            javaScriptEnabled = true
+//            useWideViewPort = true
+//            //loadWithOverviewMode = true
+//            //setSupportZoom(true)
+//            //builtInZoomControls = true
+//            // loadsImagesAutomatically = false
+//            //blockNetworkLoads = true
+//            //cacheMode = WebSettings.LOAD_NO_CACHE
+//            userAgentString = Settings(this@StoryDownloadService).webViewUserAgent
+//        }
+//
+//        webView.webViewClient = object : WebViewClient() {
+//            override fun onReceivedError(
+//                view: WebView?,
+//                errorCode: Int,
+//                description: String,
+//                failingUrl: String
+//            ) {
+//                Log.w(TAG, "Recieved error from WebView, description: $description, Failing url: $failingUrl")
+//                //without this method, your app may crash...
+//            }
+//
+////            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+////                super.onPageStarted(view, url, favicon)
+////                Log.i("WebView", "PageStarted $url")
+////                view.evaluateJavascript(SCRIPT) {
+////                    val test = StringEscapeUtils.unescapeJava(it)
+////                    if (!it.isNullOrBlank() && it != "null") {
+////                        queue.put(test)
+////                    }
+////                }
+////            }
+//
+//            override fun onPageFinished(view: WebView, url: String) {
+//                super.onPageFinished(view, url)
+//                Log.i("WebView", "PageFinished $url")
 //                view.evaluateJavascript(SCRIPT) {
-//                    val test = StringEscapeUtils.unescapeJava(it)
-//                    if (!it.isNullOrBlank() && it != "null") {
-//                        queue.put(test)
-//                    }
+//                    queue.put(StringEscapeUtils.unescapeJava(it))
 //                }
 //            }
-
-            override fun onPageFinished(view: WebView, url: String) {
-                super.onPageFinished(view, url)
-                Log.i("WebView", "PageFinished $url")
-                view.evaluateJavascript(SCRIPT) {
-                    queue.put(StringEscapeUtils.unescapeJava(it))
-                }
-            }
-        }
-
+//        }
+//
 //        webView.webChromeClient = object: WebChromeClient() {
 //            override fun onProgressChanged(view: WebView, newProgress: Int) {
 //                super.onProgressChanged(view, newProgress)
@@ -309,12 +355,12 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
                 if (!isWebViewInitialized)
                     initWebView()
 
-                when (msg.what) {
-                    2 -> {
-                        webView.clearCache(true)
-                        webView.clearHistory()
-                    }
-                }
+//                when (msg.what) {
+//                    2 -> {
+//                        webView.clearCache(true)
+//                        webView.clearHistory()
+//                    }
+//                }
 //                if (msg.what == 1) {
 //                    webView.onPause()
 //                    webView.destroyDrawingCache()
@@ -326,7 +372,8 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
                 when (method) {
                     "GET" -> {
-                        webView.loadUrl(url)
+                        geckoSession.loadUri(url)
+//                        webView.loadUrl(url)
 //                        if (url == webView.url) {
 //                            webView.evaluateJavascript(SCRIPT) {
 //                                queue.put(StringEscapeUtils.unescapeJava(it))
@@ -353,9 +400,10 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         while (true) {
             val ret = queue.poll(120, TimeUnit.SECONDS)
             if (ret.isNullOrEmpty()) {
-                CookieManager.getInstance().removeAllCookies(null)
-                CookieManager.getInstance().flush()
-                handler.sendEmptyMessage(2)
+                return ""
+//                CookieManager.getInstance().removeAllCookies(null)
+//                CookieManager.getInstance().flush()
+//                handler.sendEmptyMessage(2)
             } else if (ret.contains("| FanFiction</title>") || ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>")) {
                 // handler.sendEmptyMessage(1)
                 return ret

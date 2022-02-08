@@ -142,6 +142,7 @@ class StoryDownloadHelper(
     // If the script requests a website-quell-code this function gets called
     @SuppressWarnings("unused")
     fun web_request(method: String, url: String, kargs: PyObject): String {
+        Thread.sleep(3000)
         return webRequest.webRequest(method, url)
         // Log.i(this::class.simpleName, "got return for url $url:\n\n$ret")
     }

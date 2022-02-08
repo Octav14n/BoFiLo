@@ -10,6 +10,7 @@ object Constants {
     const val PREF_CACHE_SAF = "pref_cache_saf"
     const val PREF_SHOW_CONSOLE = "pref_show_console"
     const val PREF_IS_ADULT = "pref_is_adult"
+    const val PREF_WEBVIEW_USER_AGENT = "pref_webview_ua"
 
     const val TIMEOUT_IO_MILLIS = 15000L
 
