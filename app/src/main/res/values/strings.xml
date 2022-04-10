@@ -76,4 +76,5 @@
 
 
     <string name="webview_user_agent_default">none</string>
+    <string name="acra_mail_subject">ACRA crashreport from BoFiLo</string>
 </resources>

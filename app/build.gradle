@@ -84,4 +84,6 @@ dependencies {
     // Testing
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
     implementation 'androidx.legacy:legacy-support-v4:+'
+    // Crash reporting
+    implementation("ch.acra:acra-mail:5.8.+")
 }

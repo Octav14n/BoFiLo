@@ -13,7 +13,7 @@
             tools:ignore="ScopedStorage"/>
 
     <application
-            android:name="com.chaquo.python.android.PyApplication"
+            android:name=".MyApplication"
             android:allowBackup="true"
             android:fullBackupContent="@xml/backup_descriptor"
             android:icon="@mipmap/ic_launcher"

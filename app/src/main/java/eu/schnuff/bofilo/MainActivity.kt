@@ -26,7 +26,10 @@ import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
 import eu.schnuff.bofilo.settings.SettingsActivity
+import org.acra.config.mailSender
+import org.acra.data.StringFormat
 import kotlin.concurrent.thread
+import org.acra.ktx.initAcra
 
 class MainActivity : AppCompatActivity() {
     private lateinit var adapter: StoryListAdapter
