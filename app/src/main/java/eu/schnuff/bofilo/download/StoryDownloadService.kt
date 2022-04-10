@@ -245,7 +245,12 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         geckoSession.settings.apply {
             allowJavascript = true
             userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
-            // userAgentOverride = Settings(this@StoryDownloadService).webViewUserAgent
+            val ua = Settings(this@StoryDownloadService).webViewUserAgent
+            if (ua != "none")
+                userAgentOverride = ua
+        }
+        geckoSession.userAgent.accept {
+            Log.i("UserAgent", it ?: "N/A")
         }
         geckoRuntime = GeckoRuntime.create(this)
 
@@ -281,67 +286,6 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
         isWebViewInitialized = true
         //geckoView.setSession(geckoSession)
-
-//        webView = WebView(this@StoryDownloadService)
-//        //view.isDrawingCacheEnabled = true
-//        //view.measure(640, 480)
-//        //view.layout(0, 0, 640, 480)
-//        webView.settings.apply {
-//            javaScriptEnabled = true
-//            useWideViewPort = true
-//            //loadWithOverviewMode = true
-//            //setSupportZoom(true)
-//            //builtInZoomControls = true
-//            // loadsImagesAutomatically = false
-//            //blockNetworkLoads = true
-//            //cacheMode = WebSettings.LOAD_NO_CACHE
-//            userAgentString = Settings(this@StoryDownloadService).webViewUserAgent
-//        }
-//
-//        webView.webViewClient = object : WebViewClient() {
-//            override fun onReceivedError(
-//                view: WebView?,
-//                errorCode: Int,
-//                description: String,
-//                failingUrl: String
-//            ) {
-//                Log.w(TAG, "Recieved error from WebView, description: $description, Failing url: $failingUrl")
-//                //without this method, your app may crash...
-//            }
-//
-////            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-////                super.onPageStarted(view, url, favicon)
-////                Log.i("WebView", "PageStarted $url")
-////                view.evaluateJavascript(SCRIPT) {
-////                    val test = StringEscapeUtils.unescapeJava(it)
-////                    if (!it.isNullOrBlank() && it != "null") {
-////                        queue.put(test)
-////                    }
-////                }
-////            }
-//
-//            override fun onPageFinished(view: WebView, url: String) {
-//                super.onPageFinished(view, url)
-//                Log.i("WebView", "PageFinished $url")
-//                view.evaluateJavascript(SCRIPT) {
-//                    queue.put(StringEscapeUtils.unescapeJava(it))
-//                }
-//            }
-//        }
-//
-//        webView.webChromeClient = object: WebChromeClient() {
-//            override fun onProgressChanged(view: WebView, newProgress: Int) {
-//                super.onProgressChanged(view, newProgress)
-//                Log.i("WebView", "PageProgress $newProgress")
-//
-//                if (newProgress > 99) {
-//                    view.evaluateJavascript(SCRIPT) {
-//                        val tmp = StringEscapeUtils.unescapeJava(it)
-//                        queue.put(tmp)
-//                    }
-//                }
-//            }
-//        }
     }
 
     override fun webRequest(method: String, url: String): String {
@@ -355,33 +299,9 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
                 if (!isWebViewInitialized)
                     initWebView()
 
-//                when (msg.what) {
-//                    2 -> {
-//                        webView.clearCache(true)
-//                        webView.clearHistory()
-//                    }
-//                }
-//                if (msg.what == 1) {
-//                    webView.onPause()
-//                    webView.destroyDrawingCache()
-//                    webView.pauseTimers()
-//                    webView.removeAllViews()
-//                    webView.destroy()
-//                    return
-//                }
-
                 when (method) {
                     "GET" -> {
                         geckoSession.loadUri(url)
-//                        webView.loadUrl(url)
-//                        if (url == webView.url) {
-//                            webView.evaluateJavascript(SCRIPT) {
-//                                queue.put(StringEscapeUtils.unescapeJava(it))
-//                            }
-//                            webView.reload()
-//                        } else {
-//                            webView.loadUrl(url)
-//                        }
                     }
                 }
             }
@@ -401,9 +321,6 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             val ret = queue.poll(120, TimeUnit.SECONDS)
             if (ret.isNullOrEmpty()) {
                 return ""
-//                CookieManager.getInstance().removeAllCookies(null)
-//                CookieManager.getInstance().flush()
-//                handler.sendEmptyMessage(2)
             } else if (ret.contains("| FanFiction</title>") || ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>")) {
                 // handler.sendEmptyMessage(1)
                 return ret

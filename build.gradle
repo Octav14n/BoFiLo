@@ -31,9 +31,9 @@ task clean(type: Delete) {
 }
 
 ext {
-    roomVersion = '2.4.1'
-    archLifecycleVersion = '2.4.0'
-    androidxArchVersion = '2.1.0'
-    coreTestingVersion = "2.1.0"
-    materialVersion = "1.5.0"
+    roomVersion = '2.4.+'
+    archLifecycleVersion = '2.4.+'
+    androidxArchVersion = '2.1.+'
+    coreTestingVersion = "2.1.+"
+    materialVersion = "1.+"
 }

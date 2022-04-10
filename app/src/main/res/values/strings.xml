@@ -75,5 +75,5 @@
     <string name="story_write_channel_description">Save a file to your configured directory.</string>
 
 
-    <string name="webview_user_agent_default">Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko</string>
+    <string name="webview_user_agent_default">none</string>
 </resources>
