@@ -1,7 +1,6 @@
 package eu.schnuff.bofilo
 
 import android.content.Context
-import org.acra.config.dialog
 import org.acra.config.mailSender
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra
