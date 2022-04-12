@@ -77,4 +77,8 @@
 
     <string name="webview_user_agent_default">none</string>
     <string name="acra_mail_subject">ACRA crashreport from BoFiLo</string>
+    <string name="acra_dialog_title">BoFiLo crashed</string>
+    <string name="acra_dialog_text">Unfortunately BoFiLo crashed. would you like to submit a bug report via e-mail?</string>
+    <string name="acra_dialog_button_positive">Submit</string>
+    <string name="acra_dialog_button_negative">Cancel</string>
 </resources>

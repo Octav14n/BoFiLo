@@ -36,4 +36,5 @@ ext {
     androidxArchVersion = '2.1.+'
     coreTestingVersion = "2.1.+"
     materialVersion = "1.+"
+    acraVersion = "5.9.+"
 }
