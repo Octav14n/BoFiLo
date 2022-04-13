@@ -42,13 +42,14 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
     private val outputBuilder = StringBuilder()
 
     //private val doneDir = File(cacheDir.absolutePath + "/done")
+    val geckoSession: GeckoSession
+        get() {
+            if (!isWebViewInitialized)
+                initWebView()
+            return globalGeckoSession
+        }
     private var privateIniModified = 0L
     val queue = LinkedBlockingQueue<String>(1)
-
-    //lateinit var geckoView: GeckoView
-    lateinit var geckoSession: GeckoSession
-    lateinit var geckoRuntime: GeckoRuntime
-    var isWebViewInitialized = false
 
     override fun onCreate() {
         super.onCreate()
@@ -229,8 +230,12 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
         }
     }
 
-
     companion object {
+        //lateinit var geckoView: GeckoView
+        lateinit var globalGeckoSession: GeckoSession
+        lateinit var geckoRuntime: GeckoRuntime
+        var isWebViewInitialized = false
+
         const val CHANNEL_ID = "StoryDownloadProgress"
         const val CHANNEL_INTERACTION_ID = "StoryDownloadInteraction"
         const val NOTIFICATION_ID = 3001
@@ -241,15 +246,15 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
     fun initWebView() {
         //geckoView = GeckoView(this)
-        geckoSession = GeckoSession()
-        geckoSession.settings.apply {
+        globalGeckoSession = GeckoSession()
+        globalGeckoSession.settings.apply {
             allowJavascript = true
             userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
             val ua = Settings(this@StoryDownloadService).webViewUserAgent
             if (ua != "none")
                 userAgentOverride = ua
         }
-        geckoSession.userAgent.accept {
+        globalGeckoSession.userAgent.accept {
             Log.i("UserAgent", it ?: "N/A")
         }
         geckoRuntime = GeckoRuntime.create(this)
@@ -277,15 +282,15 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
                 .ensureBuiltIn("resource://android/assets/webextension/", "webextension@bofilo.schnuff.eu")
                 .accept(
                     { extension ->
-                        geckoSession.webExtensionController.setMessageDelegate(extension!!, messageDelegate, "browser")
+                        globalGeckoSession.webExtensionController.setMessageDelegate(extension!!, messageDelegate, "browser")
                     },
                     { e -> Log.e("MessageDelegate", "Error registering WebExtension", e) }
                 )
         }
-        geckoSession.open(geckoRuntime)
+        globalGeckoSession.open(geckoRuntime)
 
         isWebViewInitialized = true
-        //geckoView.setSession(geckoSession)
+        //geckoView.setSession(globalGeckoSession)
     }
 
     override fun webRequest(method: String, url: String): String {
@@ -301,7 +306,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
 
                 when (method) {
                     "GET" -> {
-                        geckoSession.loadUri(url)
+                        globalGeckoSession.loadUri(url)
                     }
                 }
             }

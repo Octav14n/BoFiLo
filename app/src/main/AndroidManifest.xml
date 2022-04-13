@@ -23,6 +23,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             tools:targetApi="q">
+        <meta-data android:name="io.sentry.dsn" android:value="https://08bdb878599e41389357e31f4147dbbd@o1203267.ingest.sentry.io/6329049" />
         <activity
                 android:name=".CaptchaActivity"
                 android:exported="true"
