@@ -86,7 +86,7 @@ class StoryDownloadService : IntentService("StoryDownloadService"), StoryDownloa
             stopForeground(true)
             return
         }
-        val item = viewModel.get(url)
+        val item = viewModel.get(url) ?: viewModel.add(url)
         if (item.finished) {
             // exit if item has been canceled/finished in the meantime
             Log.d(TAG, "could not download $url because it is already finished")

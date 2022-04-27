@@ -73,8 +73,9 @@ class StoryWriteService : Service() {
             }
             if (intent.hasExtra(EXTRA_PARAM_UPDATE_ITEM_URL)) {
                 val url = intent.getStringExtra(EXTRA_PARAM_UPDATE_ITEM_URL) ?: throw IllegalStateException("Something went wrong with the url.")
-                val item = viewModel.get(url)
-                viewModel.setUri(item, dstUri)
+                viewModel.get(url)?.run {
+                    viewModel.setUri(this, dstUri)
+                }
             }
 
             startForeground(startId, createNotification(srcUri))

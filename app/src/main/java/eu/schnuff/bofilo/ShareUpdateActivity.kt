@@ -42,7 +42,7 @@ class ShareUpdateActivity : AppCompatActivity() {
             val storyListViewModel = StoryListViewModel(context.applicationContext as Application)
 
             thread {
-                val item = if (storyListViewModel.has(url)) storyListViewModel.get(url) else storyListViewModel.add(url)
+                val item = storyListViewModel.get(url) ?: storyListViewModel.add(url)
                 if (item.finished)
                     storyListViewModel.setFinished(item, false)
                 val intent = Intent(context, StoryDownloadService::class.java).apply {

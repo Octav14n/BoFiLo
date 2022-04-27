@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDownload(url: String) {
         thread {
-            val item = if (storyListViewModel.has(url)) storyListViewModel.get(url) else storyListViewModel.add(url)
+            val item = storyListViewModel.get(url) ?: storyListViewModel.add(url)
             if (item.finished)
                 storyListViewModel.setFinished(item, false)
             val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {

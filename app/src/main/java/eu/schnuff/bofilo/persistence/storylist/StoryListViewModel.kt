@@ -23,8 +23,8 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         Companion.consoleOutput.postValue(output)
     }
 
-    fun get(url: String): StoryListItem {
-        return implGet(url)!!
+    fun get(url: String): StoryListItem? {
+        return implGet(url)
     }
 
 
