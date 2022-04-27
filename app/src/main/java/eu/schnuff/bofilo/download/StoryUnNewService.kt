@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -60,8 +61,10 @@ class StoryUnNewService : Service() {
                 Log.e(this::class.simpleName, "UnNew error", e)
                 if (IS_FOREGROUND)
                     startForeground(startId, createNotification(originalName, "failed"))
-                else
+                else {
+                    Looper.prepare()
                     Toast.makeText(this, "Failed to UnNew '$originalName'", Toast.LENGTH_SHORT).show()
+                }
             }
 
             cache.delete()
