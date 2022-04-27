@@ -9,7 +9,9 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_DEFERRED
 import androidx.core.net.toFile
@@ -60,7 +62,14 @@ class StoryWriteService : Service() {
 
                 Log.d(this::class.simpleName, "Now creating file: uri: %s, filename: %s, mime-type: %s".format(df.uri, fileName, mimeType))
 
-                df.createFile(mimeType, fileName).uri
+                try {
+                    df.createFile(mimeType, fileName).uri
+                } catch (e: java.lang.Exception) {
+                    Looper.prepare()
+                    Log.e(this::class.simpleName, "Could not create file '$fileName' in '$dstDirUri' with mimeType '$mimeType'", e)
+                    Toast.makeText(this, "Could not create file '$fileName'.", Toast.LENGTH_LONG)
+                    return@thread
+                }
             }
             if (intent.hasExtra(EXTRA_PARAM_UPDATE_ITEM_URL)) {
                 val url = intent.getStringExtra(EXTRA_PARAM_UPDATE_ITEM_URL) ?: throw IllegalStateException("Something went wrong with the url.")
