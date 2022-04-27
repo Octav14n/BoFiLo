@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId "eu.schnuff.bofilo"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 30
         versionCode 8
         versionName "0.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
