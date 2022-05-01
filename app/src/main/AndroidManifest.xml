@@ -33,7 +33,8 @@
                 android:name=".ShareUpdateActivity"
                 android:exported="true"
                 android:launchMode="singleTask"
-                android:noHistory="true"
+                android:excludeFromRecents="true"
+                android:taskAffinity=".ShareUpdateActivity"
                 android:theme="@style/Theme.NoView">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
