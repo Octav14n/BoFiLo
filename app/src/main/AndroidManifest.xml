@@ -45,31 +45,13 @@
                 <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
-        <activity
-                android:name=".settings.SettingsActivity"
-                android:exported="true"
-                android:label="@string/title_activity_settings"
-                android:parentActivityName=".MainActivity">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="eu.schnuff.bofilo.MainActivity"/>
-        </activity>
-
-        <service
-                android:name=".download.StoryDownloadService"
-                android:enabled="true"
-                android:exported="false">
-        </service>
-        <service
-                android:name=".download.StoryUnNewService"
-                android:enabled="true"
-                android:exported="false"/>
 
         <activity
                 android:name=".ShareUnNewActivity"
                 android:exported="true"
                 android:launchMode="singleTask"
                 android:noHistory="true"
+                android:taskAffinity=".ShareUnNewActivity"
                 android:theme="@style/Theme.NoView">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -79,11 +61,16 @@
             </intent-filter>
         </activity>
 
-        <service
-                android:name=".download.StoryWriteService"
-                android:enabled="true"
-                android:exported="false"
-                android:foregroundServiceType="dataSync"/>
+
+        <activity
+                android:name=".settings.SettingsActivity"
+                android:exported="true"
+                android:label="@string/title_activity_settings"
+                android:parentActivityName=".MainActivity">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="eu.schnuff.bofilo.MainActivity"/>
+        </activity>
 
         <activity
                 android:name=".MainActivity"
