@@ -39,20 +39,8 @@ class ShareUpdateActivity : AppCompatActivity() {
 
     companion object {
         fun scheduleDownload(context: Context, url: String) {
-            val storyListViewModel = StoryListViewModel(context.applicationContext as Application)
-
             thread {
-                val item = storyListViewModel.get(url) ?: storyListViewModel.add(url)
-                if (item.finished)
-                    storyListViewModel.setFinished(item, false)
-                val intent = Intent(context, StoryDownloadService::class.java).apply {
-                    putExtra(Intent.EXTRA_TEXT, item.url)
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+                StoryDownloadService.start(context, url)
                 Handler(context.mainLooper).post {
                     Toast.makeText(
                         context,

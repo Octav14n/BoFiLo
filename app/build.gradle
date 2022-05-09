@@ -49,7 +49,7 @@ android {
     defaultConfig {
         applicationId "eu.schnuff.bofilo"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 8
         versionName "0.8." + versionBuild
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -114,6 +114,8 @@ dependencies {
     // Lifecycle components
     implementation "androidx.lifecycle:lifecycle-extensions:2.+"
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.androidxArchVersion"
+    // Worker component
+    implementation "androidx.work:work-runtime-ktx:2.7.+"
     // ViewModel Kotlin support
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.archLifecycleVersion"
     // UI
@@ -122,5 +124,5 @@ dependencies {
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
     implementation 'androidx.legacy:legacy-support-v4:+'
     // Crash reporting
-    implementation 'io.sentry:sentry-android:5.7.3'
+    implementation 'io.sentry:sentry-android:5.7.+'
 }

@@ -11,6 +11,9 @@ interface StoryListDao {
     @Query("SELECT * FROM story_list_item WHERE url = :url")
     fun getByUrl(url: String): StoryListItem?
 
+    @Query("SELECT * FROM story_list_item WHERE finished = 0 ORDER BY created ASC")
+    fun getUnfinished(): Array<StoryListItem>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: StoryListItem)
 

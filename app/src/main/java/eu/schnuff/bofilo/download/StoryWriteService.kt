@@ -1,14 +1,15 @@
 package eu.schnuff.bofilo.download
 
-import android.app.*
+import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
-import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
@@ -16,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_DEFERRED
 import androidx.core.net.toFile
 import androidx.core.net.toUri
+import androidx.work.*
 import eu.schnuff.bofilo.Helpers.copyFile
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
@@ -23,7 +25,6 @@ import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
-import kotlin.concurrent.thread
 
 private const val EXTRA_PARAM_SRC_URI = "srcUri"
 private const val EXTRA_PARAM_DST_URI = "dstUri"
@@ -32,155 +33,58 @@ private const val EXTRA_PARAM_DST_FILE_NAME = "dstFileName"
 private const val EXTRA_PARAM_DST_MIME_TYPE = "dstMimeType"
 private const val EXTRA_PARAM_UPDATE_ITEM_URL = "updateItemUrl"
 private const val CHANNEL_ID = "StoryWriteService"
+private const val NOTIFICATION_ID = 3002
 
-class StoryWriteService : Service() {
-    private lateinit var viewModel: StoryListViewModel
+object StoryWriteService {
+    fun start(context: Context, srcUri: Uri, dstUri: Uri) {
+        Log.d(this::class.simpleName, "Now writing to %s".format(dstUri))
 
-    override fun onCreate() {
-        super.onCreate()
-        viewModel = StoryListViewModel(application)
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent ?: throw IllegalStateException("No intent provided.")
-        thread {
-            super.onStartCommand(intent, flags, startId)
-            val srcUri = intent.getStringExtra(EXTRA_PARAM_SRC_URI)?.toUri() ?: throw IllegalStateException("No SRC uri provided.")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(startId, createNotification(srcUri), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-            } else {
-                startForeground(startId, createNotification(srcUri))
+        while (true) {
+            try {
+                context.contentResolver.copyFile(srcUri, dstUri)
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(dstUri.toFile().absolutePath),
+                    arrayOf(null),
+                    null
+                )
+                break
+            } catch (e: Exception) {
+                Log.e(this::class.simpleName, "Could not write to destination.", e)
             }
-
-            val dstUri = if (intent.hasExtra(EXTRA_PARAM_DST_URI))
-                 intent.getStringExtra(EXTRA_PARAM_DST_URI)?.toUri() ?: throw IllegalStateException("No destination uri provided.")
-            else {
-                val dstDirUri = intent.getStringExtra(EXTRA_PARAM_DST_DIR_URI)?.toUri() ?: throw IllegalStateException("No destination dir uri provided.")
-                val fileName = intent.getStringExtra(EXTRA_PARAM_DST_FILE_NAME) ?: throw IllegalStateException("No file name provided.")
-                val mimeType = intent.getStringExtra(EXTRA_PARAM_DST_MIME_TYPE) ?: throw IllegalStateException("No Mime-Type provided.")
-                val df = FileWrapper.fromUri(this, dstDirUri)
-
-                Log.d(this::class.simpleName, "Now creating file: uri: %s, filename: %s, mime-type: %s".format(df.uri, fileName, mimeType))
-
-                try {
-                    df.createFile(mimeType, fileName).uri
-                } catch (e: java.lang.Exception) {
-                    Looper.prepare()
-                    Log.e(this::class.simpleName, "Could not create file '$fileName' in '$dstDirUri' with mimeType '$mimeType'", e)
-                    Toast.makeText(this, "Could not create file '$fileName'.", Toast.LENGTH_LONG)
-                    return@thread
-                }
-            }
-            if (intent.hasExtra(EXTRA_PARAM_UPDATE_ITEM_URL)) {
-                val url = intent.getStringExtra(EXTRA_PARAM_UPDATE_ITEM_URL) ?: throw IllegalStateException("Something went wrong with the url.")
-                viewModel.get(url)?.run {
-                    viewModel.setUri(this, dstUri)
-                }
-            }
-
-            startForeground(startId, createNotification(srcUri))
-            Log.d(this::class.simpleName, "Now writing to %s".format(dstUri))
-
-            while (true) {
-                try {
-                    contentResolver.copyFile(srcUri, dstUri)
-                    MediaScannerConnection.scanFile(
-                        applicationContext,
-                        arrayOf(dstUri.toFile().absolutePath),
-                        arrayOf(null),
-                        null
-                    )
-                    /*sendBroadcast(
-                        Intent(
-                            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, dstUri
-                        )
-                    )*/
-                    break
-                } catch (e: Exception) {
-                    Log.e(this::class.simpleName, "Could not write to destination.", e)
-                }
-            }
-            if (srcUri.scheme == ContentResolver.SCHEME_FILE) {
-                Log.d(this::class.simpleName, "Now deleting $srcUri .")
-                srcUri.path?.let {
-                    File(it).delete()
-                }
-            }
-
-            stopForeground(true)
-            stopSelf(startId)
         }
-
-        return START_REDELIVER_INTENT
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        TODO("Not yet implemented")
-    }
-
-    private fun createNotification(uri: Uri): Notification {
-        createNotificationChannel()
-        // Create an explicit intent for the Main Activity in your app
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification_unnew)
-            .setContentTitle(getString(R.string.story_write_foreground_name).format(uri.lastPathSegment))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .apply {
-                foregroundServiceBehavior = FOREGROUND_SERVICE_DEFERRED
+        if (srcUri.scheme == ContentResolver.SCHEME_FILE) {
+            Log.d(this::class.simpleName, "Now deleting $srcUri .")
+            srcUri.path?.let {
+                File(it).delete()
             }
-            // Set the intent which will fire when the user taps the notification
-            .setContentIntent(pendingIntent)
-
-        return builder.build()
-    }
-
-    private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.story_write_channel_name)
-            val descriptionText = getString(R.string.story_write_channel_description)
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
         }
     }
 
-    companion object {
-        fun start(context: Context, srcUri: Uri, dstUri: Uri) {
-            val intent = Intent(context, StoryWriteService::class.java).apply {
-                putExtra(EXTRA_PARAM_SRC_URI, srcUri.toString())
-                putExtra(EXTRA_PARAM_DST_URI, dstUri.toString())
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+    fun start(context: Context, item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
+        val dstUri = getDstUri(context, dstDirUri, dstFileName, dstMimeType)
+
+        if (dstUri == null) {
+            Looper.prepare()
+            Toast.makeText(context, "Writing failed. No destination uri could be given.", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        fun start(context: Context, item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
-            val intent = Intent(context, StoryWriteService::class.java).apply {
-                putExtra(EXTRA_PARAM_UPDATE_ITEM_URL, item.url)
-                putExtra(EXTRA_PARAM_SRC_URI, srcUri.toString())
-                putExtra(EXTRA_PARAM_DST_DIR_URI, dstDirUri.toString())
-                putExtra(EXTRA_PARAM_DST_FILE_NAME, dstFileName)
-                putExtra(EXTRA_PARAM_DST_MIME_TYPE, dstMimeType)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+        start(context, srcUri, dstUri)
+    }
+
+    private fun getDstUri(context: Context, dstDirUri: Uri, fileName: String, mimeType: String) : Uri? {
+        val df = FileWrapper.fromUri(context, dstDirUri)
+
+        Log.d(this::class.simpleName, "Now creating file: uri: %s, filename: %s, mime-type: %s".format(df.uri, fileName, mimeType))
+
+        return try {
+            df.createFile(mimeType, fileName).uri
+        } catch (e: java.lang.Exception) {
+            Looper.prepare()
+            Log.e(this::class.simpleName, "Could not create file '$fileName' in '$dstDirUri' with mimeType '$mimeType'", e)
+            Toast.makeText(context, "Could not create file '$fileName'.", Toast.LENGTH_LONG)
+            null
         }
     }
 }

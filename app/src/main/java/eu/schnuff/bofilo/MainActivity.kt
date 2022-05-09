@@ -146,19 +146,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleDownload(url: String) {
-        thread {
-            val item = storyListViewModel.get(url) ?: storyListViewModel.add(url)
-            if (item.finished)
-                storyListViewModel.setFinished(item, false)
-            val intent = Intent(this@MainActivity, StoryDownloadService::class.java).apply {
-                putExtra(Intent.EXTRA_TEXT, item.url)
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-        }
+        StoryDownloadService.start(this, url)
     }
 
     private fun unNewStory(item: StoryListItem) {

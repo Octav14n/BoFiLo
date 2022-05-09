@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.LinearLayout
+import eu.schnuff.bofilo.download.StoryDownloadGeckoHelper
 import eu.schnuff.bofilo.download.StoryDownloadService
 import org.mozilla.geckoview.GeckoView
 
@@ -24,11 +25,7 @@ class CaptchaActivity : AppCompatActivity() {
     private val connection = object: ServiceConnection {
         @SuppressLint("SetJavaScriptEnabled")
         override fun onServiceConnected(p0: ComponentName, p1: IBinder) {
-            val binder = p1 as StoryDownloadService.StoryDownloadBinder
-            service = binder.Service
-            service?.run {
-                webView.setSession(geckoSession)
-            }
+            webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
             /*webView!!.run {
                 settings.apply {
                     javaScriptEnabled = true
@@ -64,17 +61,6 @@ class CaptchaActivity : AppCompatActivity() {
         if (intent != null)
             onNewIntent(intent)
     }
-
-    override fun onStop() {
-        super.onStop()
-        service?.queue?.put("")
-        unbindService(connection)
-    }
-
-//    override fun onNewIntent(intent: Intent) {
-//        super.onNewIntent(intent)
-//        webView?.loadUrl(intent.getStringExtra(INTENT_EXTRA_URL)!!)
-//    }
 
     companion object {
         const val INTENT_EXTRA_URL = "url"

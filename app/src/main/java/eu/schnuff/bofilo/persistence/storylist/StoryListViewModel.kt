@@ -27,6 +27,8 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         return implGet(url)
     }
 
+    fun getUnfinished() = dao.getUnfinished()
+
 
     fun has(url: String): Boolean {
         return implGet(url) != null
