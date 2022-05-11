@@ -50,8 +50,8 @@ android {
         applicationId "eu.schnuff.bofilo"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 8
-        versionName "0.8." + versionBuild
+        versionCode 9
+        versionName "0.9." + versionBuild
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //setProperty("archivesBaseName", "BoFiLo-$versionName")
         ndk {
