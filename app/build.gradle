@@ -38,7 +38,7 @@ android {
 
     // Hook to check if the release/debug task is among the tasks to be executed.
     //Let's make use of it
-    gradle.taskGraph.whenReady {taskGraph ->
+    gradle.taskGraph.whenReady { taskGraph ->
         if (taskGraph.hasTask(assembleDebug)) {  /* when run debug task */
             autoIncrementBuildNumber()
         } else if (taskGraph.hasTask(assembleRelease)) { /* when run release task */
@@ -86,9 +86,10 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
-    lintOptions {
+    lint {
         abortOnError false
     }
+    namespace 'eu.schnuff.bofilo'
 }
 
 dependencies {
@@ -124,5 +125,5 @@ dependencies {
     androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
     implementation 'androidx.legacy:legacy-support-v4:+'
     // Crash reporting
-    implementation 'io.sentry:sentry-android:5.7.+'
+    implementation 'io.sentry:sentry-android:+'
 }
