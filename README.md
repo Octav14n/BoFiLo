@@ -18,7 +18,7 @@ Download apk from [![](app/src/main/res/drawable-mdpi/ic_notification_download.p
 [![Setting screen](.github/screenshots/settings_preview.png)](.github/screenshots/settings.png)
 
 ### For Developers:
-to be able to interact between Kotlin(/Java) and Python [Chaquopy](https://chaquo.com/chaquopy/) is used (closed source but at no charge for open source products)\
+to be able to interact between Kotlin(/Java) and Python [Chaquopy](https://chaquo.com/chaquopy/) is used\
 the access to FanFicFare happens in [helper.py](app/src/main/python/helper.py).  
 
 the interaction between Kotlin and Python happens in:

@@ -16,8 +16,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Add local.properties
-        run: echo "chaquopy.license="${{ secrets.CHAQUOPY_LICENSE }} > local.properties
       - name: Build APK
         run: bash ./gradlew assembleDebug --stacktrace
       - name: Upload APK
