@@ -60,6 +60,12 @@ class CaptchaActivity : AppCompatActivity() {
 
         if (intent != null)
             onNewIntent(intent)
+
+        webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
+        webView.run {
+            mainView.addView(this)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        }
     }
 
     companion object {
