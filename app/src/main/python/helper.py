@@ -2,6 +2,9 @@
 import sys
 
 
+def get_handler():
+    return None
+
 # wrapper for sys.stdout to redirect it to ui console
 class MyStdOut:
     def __init__(self, out, prefix=''):
