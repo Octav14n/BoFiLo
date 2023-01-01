@@ -7,7 +7,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'com.chaquo.python'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     def versionPropsFile = file('version.properties')
     def versionBuild
 
