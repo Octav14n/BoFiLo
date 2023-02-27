@@ -25,7 +25,7 @@ class MyStdOut:
 sys.stdout = MyStdOut(sys.stdout)
 sys.stderr = MyStdOut(sys.stderr, "\nError: ")
 
-import fanficfare.fetcher
+import fanficfare.fetchers.base_fetcher
 import fanficfare.cli
 import os
 import threading
@@ -162,14 +162,14 @@ class MyAdapter(object):
         return getattr(self.adapter, attr)
 
 
-class MyFetcher(fanficfare.fetcher.Fetcher):
+class MyFetcher(fanficfare.fetchers.base_fetcher.Fetcher):
     def __init__(self, get_config_fn, get_config_list_fn):
         super(MyFetcher, self).__init__(get_config_fn, get_config_list_fn)
         self.handler = get_handler()
 
     def request(self, *args, **kargs):
         # print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
-        ret = fanficfare.fetcher.FetcherResponse(
+        ret = fanficfare.fetchers.base_fetcher.FetcherResponse(
             self.handler.web_request(args[0], args[1], kargs),
             args[0],
             False
@@ -249,6 +249,8 @@ def unnew(filepath):
 
 if __name__ == "__main__":
     from os.path import expanduser
-    read_personal_ini(expanduser('~/.fanficfare/personal.ini'))
+    personal_ini_path = expanduser('~/.fanficfare/personal.ini')
+    if os.path.isfile(personal_ini_path):
+        read_personal_ini(personal_ini_path)
     # start(None, 'https://fictionhunt.com/stories/b8kmkn3/the-champion-reading-i', False)
-    start(None, 'https://www.fanfiction.net/s/12302907/5/Si-Vis-Pacem-Para-Bellum', False)
+    start(None, 'https://www.royalroad.com/fictions/best-rated', False)
