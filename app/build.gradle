@@ -7,7 +7,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'com.chaquo.python'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     def versionPropsFile = file('version.properties')
     def versionBuild
 
@@ -48,13 +48,13 @@ android {
     defaultConfig {
         applicationId "eu.schnuff.bofilo"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdk 34
         versionCode 10
         versionName "0.10." + versionBuild
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         //setProperty("archivesBaseName", "BoFiLo-$versionName")
         ndk {
-            abiFilters "armeabi-v7a", "x86", "x86_64"
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
         }
         python {
             pip {
@@ -99,8 +99,8 @@ dependencies {
     implementation 'org.mozilla.geckoview:geckoview:+'
     // Google/Intellij
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.5.+'
-    implementation 'androidx.core:core-ktx:1.8.+'
+    implementation 'androidx.appcompat:appcompat:1.6.+'
+    implementation 'androidx.core:core-ktx:1.9.+'
     implementation 'androidx.constraintlayout:constraintlayout:2.+'
     implementation 'androidx.preference:preference-ktx:1.+'
     androidTestImplementation 'androidx.test:runner:1.+'
