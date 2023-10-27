@@ -5,11 +5,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 apply plugin: 'com.chaquo.python'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    compileSdkVersion 34
     def versionPropsFile = file('version.properties')
     def versionBuild
+    compileSdk 34
 
     /*Setting default value for versionBuild which is the last incremented value stored in the file */
     if (versionPropsFile.canRead()) {
@@ -64,7 +65,10 @@ android {
             }
         }
     }
-    buildFeatures.viewBinding = true
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
     buildTypes {
         debug {
             // applicationIdSuffix ".debug"
@@ -85,6 +89,9 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.0"
+    }
     lint {
         abortOnError false
     }
@@ -95,14 +102,17 @@ dependencies {
     // Third party
     implementation 'io.github.ParkSangGwon:tedpermission-normal:3.+'
     implementation 'org.apache.commons:commons-text:1.9'
+    implementation 'androidx.compose.runtime:runtime:1+'
     // GeckoView
     implementation 'org.mozilla.geckoview:geckoview:+'
     // Google/Intellij
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.6.+'
-    implementation 'androidx.core:core-ktx:1.9.+'
+    implementation 'androidx.core:core-ktx:1.+'
     implementation 'androidx.constraintlayout:constraintlayout:2.+'
     implementation 'androidx.preference:preference-ktx:1.+'
+    implementation 'androidx.core:core-ktx:+'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.+'
     androidTestImplementation 'androidx.test:runner:1.+'
     androidTestImplementation 'androidx.test.ext:junit:1.+'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.+'
@@ -125,4 +135,10 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:+'
     // Crash reporting
     implementation 'io.sentry:sentry-android:+'
+
+    //implementation 'androidx.compose.material3:material3:+'
+    //implementation 'androidx.compose.ui:ui-tooling-preview:+'
+    //debugImplementation 'androidx.compose.ui:ui-tooling:+'
+    //implementation 'androidx.compose.material:material-icons-core:+'
+    //implementation 'androidx.compose.runtime:runtime-livedata:+'
 }

@@ -181,7 +181,7 @@ class StoryDownloadService(
                 )
         }
 
-        return ForegroundInfo(NOTIFICATION_ID, builder.build())
+        return ForegroundInfo(NOTIFICATION_ID, builder.build(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
 
     private fun createNotificationChannel() {
