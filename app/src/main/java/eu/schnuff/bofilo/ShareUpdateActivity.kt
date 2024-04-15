@@ -38,9 +38,9 @@ class ShareUpdateActivity : AppCompatActivity() {
 
 
     companion object {
-        fun scheduleDownload(context: Context, url: String) {
+        fun scheduleDownload(context: Context, url: String, forceDownload: Boolean=false) {
             thread {
-                StoryDownloadService.start(context, url)
+                StoryDownloadService.start(context, url, forceDownload)
                 Handler(context.mainLooper).post {
                     Toast.makeText(
                         context,

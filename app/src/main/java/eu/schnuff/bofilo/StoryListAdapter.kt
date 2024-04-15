@@ -1,8 +1,13 @@
 package eu.schnuff.bofilo
 
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
+import android.graphics.ColorFilter
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import eu.schnuff.bofilo.databinding.StoryListDetailBinding
 import eu.schnuff.bofilo.download.StoryDownloadService
@@ -12,6 +17,8 @@ import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView.Adapter<StoryListAdapter.MyViewHolder>() {
     private var myDataset = emptyArray<StoryListItem>()
     var onLongClick: (StoryListItem) -> Unit = {}
+    private lateinit var progressColorNormal: ColorFilter
+    private lateinit var progressColorForce: ColorFilter
 
     fun setAll(items: Array<StoryListItem>) {
         myDataset = items
@@ -29,6 +36,10 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
     override fun onCreateViewHolder(parent: ViewGroup,
                                     viewType: Int): MyViewHolder {
         // create a new view
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            progressColorNormal = BlendModeColorFilter(ContextCompat.getColor(parent.context, R.color.colorListProgressNormal), BlendMode.SRC_IN)
+            progressColorForce = BlendModeColorFilter(ContextCompat.getColor(parent.context, R.color.colorListProgressForce), BlendMode.SRC_IN)
+        }
         return MyViewHolder(StoryListDetailBinding.inflate(LayoutInflater.from(parent.context), parent, false))
     }
 
@@ -48,6 +59,11 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
             val p = item.progress ?: 0
             val m = item.max
             holder.binding.progress.visibility = View.VISIBLE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                holder.binding.progress.progressDrawable.colorFilter =
+                    if (item.forceDownload) progressColorForce else progressColorNormal
+                holder.binding.progress.indeterminateDrawable.colorFilter = if (item.forceDownload) progressColorForce else progressColorNormal
+            }
             if (item.url != StoryDownloadService.ActiveItem?.url) {
                 // Handle waiting downloads
                 holder.binding.progressText.visibility = View.GONE

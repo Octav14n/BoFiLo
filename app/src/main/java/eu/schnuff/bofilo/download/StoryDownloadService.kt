@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -181,7 +182,10 @@ class StoryDownloadService(
                 )
         }
 
-        return ForegroundInfo(NOTIFICATION_ID, builder.build(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            ForegroundInfo(NOTIFICATION_ID, builder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        else
+            ForegroundInfo(NOTIFICATION_ID, builder.build())
     }
 
     private fun createNotificationChannel() {
@@ -210,13 +214,14 @@ class StoryDownloadService(
             private set
         const val TAG = "download" // Debug TAG
 
-        fun start(context: Context, url: String) {
+        fun start(context: Context, url: String, forceDownload: Boolean) {
             thread {
                 val viewModel = StoryListViewModel(context.applicationContext as Application)
                 val item = viewModel.get(url) ?: viewModel.add(url)
                 if (item.finished) {
                     viewModel.setFinished(item, false)
                 }
+                viewModel.setForcedDownload(item, forceDownload)
 
                 val manager = WorkManager.getInstance(context)
                 manager.beginUniqueWork(

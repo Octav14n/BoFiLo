@@ -210,7 +210,7 @@ def get_handler() -> Handler:
     return handlers.get(threading.get_ident(), None)
 
 
-def start(my_handler, url, save_cache=False):
+def start(my_handler, url, save_cache=False, forceDownload=False):
     # set Kotlin-Service interface
     handlers[threading.get_ident()] = my_handler if my_handler is not None else Handler(url)
     # modify FanFicFare to inject custom code
@@ -223,19 +223,23 @@ def start(my_handler, url, save_cache=False):
         # '--no-meta-chapters',
         # '--progress',
         # '--debug',
-        '--update-epub',
+        '--update-epub' if not forceDownload else '-U',
         '--non-interactive',
         url
     ]
     if save_cache:
         options.insert(0, '--save-cache')
+    if forceDownload:
+        options.insert(0, '--force')
+        print('using parameters -U --force')
 
     # run FanFicFare cli version.
     try:
         fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
         get_handler().finish(True)
-    except:
+    except Exception as e:
         if get_handler():
+            print(e, file=sys.stderr)
             get_handler().finish(False)
 
 

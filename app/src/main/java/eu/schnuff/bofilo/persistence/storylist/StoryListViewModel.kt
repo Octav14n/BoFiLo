@@ -99,6 +99,14 @@ class StoryListViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun setForcedDownload(item: StoryListItem, forcedDownload: Boolean) {
+        runBlocking {
+            update(item) {
+                this.forceDownload = forcedDownload
+            }.join()
+        }
+    }
+
 
     // Interaction with the DataAccessObject
     // Add given item into the db

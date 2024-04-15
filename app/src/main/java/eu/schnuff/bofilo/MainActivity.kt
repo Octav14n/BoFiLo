@@ -68,11 +68,13 @@ class MainActivity : AppCompatActivity() {
                 setItems(R.array.list_actions) { dialog, which ->
                     when (which) {
                         0 -> thread {
-                            storyListViewModel.setFinished(item, false)
                             scheduleDownload(item.url)
                         }
                         1 -> unNewStory(item)
-                        2 -> storyListViewModel.remove(item)
+                        2 -> thread {
+                            scheduleDownload(item.url, true)
+                        }
+                        3 -> storyListViewModel.remove(item)
                     }
                     dialog.dismiss()
                 }
@@ -145,8 +147,8 @@ class MainActivity : AppCompatActivity() {
         //moveTaskToBack(true)
     }
 
-    private fun scheduleDownload(url: String) {
-        StoryDownloadService.start(this, url)
+    private fun scheduleDownload(url: String, force: Boolean = false) {
+        StoryDownloadService.start(this, url, force)
     }
 
     private fun unNewStory(item: StoryListItem) {

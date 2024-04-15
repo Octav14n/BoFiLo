@@ -21,7 +21,13 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
-@Database(entities = [StoryListItem::class, FileWrapperCacheItem::class], version = 2, exportSchema = false)
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE `story_list_item` ADD COLUMN forceDownload INTEGER NOT NULL DEFAULT(0)")
+    }
+}
+
+@Database(entities = [StoryListItem::class, FileWrapperCacheItem::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun storyListDao(): StoryListDao
     abstract fun fileWrapperCacheDao(): FileWrapperCacheDao
@@ -41,6 +47,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "word_database"
                 ).addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_2_3)
                     .build()
                 INSTANCE = instance
                 // return instance

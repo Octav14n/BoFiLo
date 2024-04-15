@@ -58,10 +58,9 @@ android {
             abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
         }
         python {
+            version "3.10"
             pip {
-                options "--extra-index-url", "https://testpypi.python.org/pypi"
-                install "FanFicFare"
-                install "Pillow"
+                install('-r', 'requirements.txt')
             }
         }
     }
@@ -100,39 +99,39 @@ android {
 
 dependencies {
     // Third party
-    implementation 'io.github.ParkSangGwon:tedpermission-normal:3.+'
+    implementation 'io.github.ParkSangGwon:tedpermission-normal:3.3.0'
     implementation 'org.apache.commons:commons-text:1.9'
-    implementation 'androidx.compose.runtime:runtime:1+'
+    implementation 'androidx.compose.runtime:runtime:1.5.4'
     // GeckoView
     implementation 'org.mozilla.geckoview:geckoview:+'
     // Google/Intellij
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.6.+'
-    implementation 'androidx.core:core-ktx:1.+'
-    implementation 'androidx.constraintlayout:constraintlayout:2.+'
-    implementation 'androidx.preference:preference-ktx:1.+'
-    implementation 'androidx.core:core-ktx:+'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.+'
-    androidTestImplementation 'androidx.test:runner:1.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.+'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.+'
+    implementation 'androidx.appcompat:appcompat:1.7.0-alpha03'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0-alpha13'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     // Room components
-    implementation "androidx.room:room-runtime:$rootProject.roomVersion"
-    implementation "androidx.room:room-ktx:$rootProject.roomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.roomVersion"
-    androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
+    implementation "androidx.room:room-runtime:2.6.0"
+    implementation "androidx.room:room-ktx:2.6.0"
+    kapt "androidx.room:room-compiler:2.6.0"
+    androidTestImplementation "androidx.room:room-testing:2.6.0"
     // Lifecycle components
-    implementation "androidx.lifecycle:lifecycle-extensions:2.+"
-    androidTestImplementation "androidx.arch.core:core-testing:$rootProject.androidxArchVersion"
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
     // Worker component
-    implementation "androidx.work:work-runtime-ktx:2.7.+"
+    implementation 'androidx.work:work-runtime-ktx:2.9.0-rc01'
     // ViewModel Kotlin support
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.archLifecycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
     // UI
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation "com.google.android.material:material:1.10.0"
     // Testing
-    androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
-    implementation 'androidx.legacy:legacy-support-v4:+'
+    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     // Crash reporting
     implementation 'io.sentry:sentry-android:+'
 

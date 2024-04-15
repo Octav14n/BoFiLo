@@ -16,6 +16,7 @@
     <array name="list_actions">
         <item>Restart</item>
         <item>Un-new</item>
+        <item>Force download</item>
         <item>Delete</item>
     </array>
     <string name="download_started_success">Scheduled download of "%s"</string>

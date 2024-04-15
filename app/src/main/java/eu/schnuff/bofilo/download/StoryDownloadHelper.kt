@@ -77,7 +77,8 @@ class StoryDownloadHelper(
         try {
             // Start the python-part of the service (including FanFicFare)
             val argument = originalFile?.name ?: item.url
-            helper.callAttr("start", this, argument, isSaveCache)
+            helper.callAttr("start", this, argument, isSaveCache, item.forceDownload)
+            viewModel.setForcedDownload(item, false)
         } catch (e: Exception) {
             viewModel.setTitle(item, e.message ?: e.toString())
             // delete the file in the cache directory
