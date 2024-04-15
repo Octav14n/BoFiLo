@@ -22,7 +22,7 @@ jobs:
       - name: Build APK
         run: bash ./gradlew assembleDebug --stacktrace
       - name: Upload APK
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: apk
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download APK from build
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           name: apk
       - name: Generate release tag
