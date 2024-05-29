@@ -106,7 +106,7 @@ dependencies {
     implementation 'org.mozilla.geckoview:geckoview:+'
     // Google/Intellij
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.7.0-beta01'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0-alpha13'
     implementation 'androidx.preference:preference-ktx:1.2.1'
