@@ -34,6 +34,8 @@ jobs:
         env:
           LOCAL_PROPERTIES: ${{ secrets.SIGN_KEYSTORE }}
         run: echo "$LOCAL_PROPERTIES" | base64 -d - > ../keystore.jks
+      - name: Test Keystone
+        run: md5sum ../keystone.jks
       - name: Test Keystore
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
