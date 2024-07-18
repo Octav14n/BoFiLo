@@ -1,0 +1,41 @@
+[versions]
+agp = "8.5.0"
+ksp = "1.9.23-1.0.20"
+kotlin = "1.9.23"
+coreKtx = "1.13.1"
+junit = "4.13.2"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
+appcompat = "1.7.0"
+material = "1.12.0"
+commonsText = "1.12.0"
+sentryAndroid = "7.9.0"
+materialVersion = "1.6.8"
+geckoViewVersion = "+"
+workRuntimeKtx = "2.9.0"
+preferenceKtx = "1.2.1"
+roomKtx = "2.6.1"
+tedpermissionNormal = "3.3.0" #"125.0.20240425211020"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+geckoview = { group = "org.mozilla.geckoview", name = "geckoview", version.ref = "geckoViewVersion" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+commons-text = { group = "org.apache.commons", name = "commons-text", version.ref = "commonsText" }
+sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentryAndroid" }
+androidx-material = { group = "androidx.compose.material", name = "material", version.ref = "materialVersion" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferenceKtx" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomKtx"}
+tedpermission-normal = { group = "io.github.ParkSangGwon", name = "tedpermission-normal", version.ref = "tedpermissionNormal" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+

@@ -13,6 +13,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Setup venv
+        run: python -m venv venv
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
@@ -20,42 +26,63 @@ jobs:
           java-version: 17
       - name: Add local.properties
         run: touch local.properties
-      - name: Build APK
-        run: bash ./gradlew assembleDebug --stacktrace
-      - name: Upload APK
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Add Keystore
+        env:
+          LOCAL_PROPERTIES: ${{ secrets.SIGN_KEYSTORE }}
+        run: echo $LOCAL_PROPERTIES | base64 -d - > ../keystore.jks
+      - name: Add SigningConfig
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.SIGN_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
+        run: |
+          printf "releaseStoreFile=$(realpath $PWD/../keystore.jks)\nRELEASE_STORE_PASSWORD=%s\nRELEASE_KEY_ALIAS=%s\nRELEASE_KEY_PASSWORD=%s" \
+          $RELEASE_STORE_PASSWORD \
+          $RELEASE_KEY_ALIAS \
+          $RELEASE_KEY_PASSWORD \
+          > $GRADLE_USER_HOME/gradle.properties
+      - name: Build APK release
+        run: ./gradlew assembleRelease --stacktrace
+      - name: Build APK release
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: apkDebug
+          path: app/build/outputs/apk/debug/BoFiLo*.apk
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apkRelease
+          path: app/build/outputs/apk/release/BoFiLo*.apk
   release:
     name: Release APK
     needs: apk
     runs-on: ubuntu-latest
     steps:
-      - name: Download APK from build
+      - name: Download APK Debug from build
         uses: actions/download-artifact@v4
         with:
-          name: apk
+          name: apkDebug
+      - name: Download APK Release from build
+        uses: actions/download-artifact@v4
+        with:
+          name: apkRelease
       - name: Generate release tag
         id: tag
-        run: |
-          echo "::set-output name=release_tag::CIBuild_$(date +"%Y.%m.%d_%H-%M")"
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        with:
-          release_name: PreRelease
-          tag_name: ${{ steps.tag.outputs.release_tag }}
-          prerelease: true
+        run: echo "::set-output name=release_tag::CIBuild_$(date +"%Y.%m.%d_%H-%M")"
       - name: Upload Release APK
-        id: upload_release_asset
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
+          name: PreRelease
+          fail_on_unmatched_files: true
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: apk/app-debug.apk
+          files: |
+            apkDebug/*.apk
+            apkRelease/*.apk
           prerelease: true
           generate_release_notes: true

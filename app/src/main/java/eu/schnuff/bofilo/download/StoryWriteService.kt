@@ -61,7 +61,7 @@ object StoryWriteService {
         }
     }
 
-    fun start(context: Context, item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
+    fun start(context: Context, @Suppress("UNUSED_PARAMETER") item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
         val dstUri = getDstUri(context, dstDirUri, dstFileName, dstMimeType)
 
         if (dstUri == null) {

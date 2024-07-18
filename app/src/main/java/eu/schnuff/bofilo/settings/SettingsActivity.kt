@@ -4,14 +4,13 @@ import android.Manifest
 import android.content.ContentResolver
 import android.content.Intent
 import android.content.SharedPreferences
-import android.icu.number.NumberFormatter.with
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -20,7 +19,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.gun0912.tedpermission.PermissionListener
-import com.gun0912.tedpermission.TedPermissionUtil
 import com.gun0912.tedpermission.normal.TedPermission
 //import com.gun0912.tedpermission.TedPermissionUtil
 import eu.schnuff.bofilo.Constants
@@ -53,6 +51,71 @@ class SettingsActivity : AppCompatActivity() {
         private val sharedPreferences: SharedPreferences
             get() = PreferenceManager.getDefaultSharedPreferences(requireContext().applicationContext)
 
+        private val resultLauncherPickPersonalIni = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val data = result.data?.data
+            if (result.resultCode != RESULT_OK || data == null)
+                return@registerForActivityResult
+            DocumentFile.fromSingleUri(requireContext(), data)?.let {
+                // copy personal.ini into the data files directory.
+                requireContext().contentResolver.copyFile(it.uri, File(requireContext().filesDir, "personal.ini").toUri())
+            }
+        }
+
+        private val resultLauncherDirectoryPickDefault = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
+            if (data == null) return@registerForActivityResult
+            persistDirToSettings(Constants.PREF_DEFAULT_DIRECTORY, data)
+        }
+
+        private val resultLauncherDirectoryPickSrc = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
+            if (data == null) return@registerForActivityResult
+            persistDirToSettings(Constants.PREF_DEFAULT_SRC_DIRECTORY, data)
+        }
+
+        private fun persistDirToSettings(settingName: String, uri: Uri) {
+            // I have no idea where the file is on the filesystem (if it is even there and not in the cloud)
+            DocumentFile.fromTreeUri(requireContext().applicationContext, uri)?.let {
+                // Make access to the "default directory" permanent
+                val takeFlags: Int = (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                val resolver: ContentResolver = requireContext().contentResolver
+                resolver.takePersistableUriPermission(uri, takeFlags)
+
+
+                val childUri = DocumentsContract.buildChildDocumentsUriUsingTree(it.uri, DocumentsContract.getTreeDocumentId(it.uri))
+                sharedPreferences.edit(true) {
+                    putString(settingName, childUri.toString())
+                }
+
+                setSummary()
+            }
+
+            val externPath = Helpers.FileInformation.getPath(requireContext(), uri)
+            if (externPath != null) {
+                // I found the file on the filesystem.
+                // request permission to access it.
+                Log.d(TAG, "Extern path found, now requesting permissions.")
+                TedPermission.create()
+                    //.with(requireContext())
+                    .setPermissionListener(object : PermissionListener {
+                        override fun onPermissionGranted() {
+                            sharedPreferences.edit(true) {
+                                putString(settingName, Uri.fromFile(File(externPath)).toString())
+                            }
+
+                            setSummary()
+                        }
+
+                        override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {}
+                    })
+                    .setRationaleMessage(R.string.permission_rationale)
+                    .setDeniedMessage(R.string.permission_denied)
+                    .setPermissions(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    ).check()
+            }
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             // Replace content with the settings configured in root_preferences.xml
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -68,17 +131,17 @@ class SettingsActivity : AppCompatActivity() {
             // Add custom actions...
             // ... to get the "default directory"
             defaultDirectoryPreference.setOnPreferenceClickListener {
-                startActivityForResult(intent, PICK_DEFAULT_DIRECTORY)
+                resultLauncherDirectoryPickDefault.launch(null)
                 true
             }
             defaultSrcDirectoryPreference.setOnPreferenceClickListener {
-                startActivityForResult(intent, PICK_DEFAULT_SRC_DIRECTORY)
+                resultLauncherDirectoryPickSrc.launch(null)
                 true
             }
 
             // ... to get the personal.ini
             personaliniPreference.setOnPreferenceClickListener {
-                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                val myIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     putExtra(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                         DocumentsContract.EXTRA_INITIAL_URI else "android.provider.extra.INITIAL_URI",
@@ -87,7 +150,7 @@ class SettingsActivity : AppCompatActivity() {
                     type = Constants.MIME_INI
                 }
 
-                startActivityForResult(intent, PICK_PERSONALINI)
+                resultLauncherPickPersonalIni.launch(myIntent)
 
                 true
             }
@@ -107,68 +170,6 @@ class SettingsActivity : AppCompatActivity() {
                 getString(R.string.preference_general_choose_src_directory_summary_default)
             } else {
                 getString(R.string.preference_general_choose_src_directory_summary).format(defaultSrcDirectory)
-            }
-        }
-
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            super.onActivityResult(requestCode, resultCode, data)
-            if (resultCode == RESULT_OK && data != null && data.data != null) when (requestCode) {
-                PICK_DEFAULT_DIRECTORY, PICK_DEFAULT_SRC_DIRECTORY -> data.data?.let { uri ->
-                    val settingName = when (requestCode) {
-                        PICK_DEFAULT_DIRECTORY -> Constants.PREF_DEFAULT_DIRECTORY
-                        PICK_DEFAULT_SRC_DIRECTORY -> Constants.PREF_DEFAULT_SRC_DIRECTORY
-                        else -> throw IllegalStateException("Name not found.")
-                    }
-
-                    // I have no idea where the file is on the filesystem (if it is even there and not in the cloud)
-                    DocumentFile.fromTreeUri(requireContext().applicationContext, uri)?.let {
-                        // Make access to the "default directory" permanent
-                        val takeFlags: Int = data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        val resolver: ContentResolver = requireContext().contentResolver
-                        resolver.takePersistableUriPermission(data.data!!, takeFlags)
-
-
-                        val childUri = DocumentsContract.buildChildDocumentsUriUsingTree(it.uri, DocumentsContract.getTreeDocumentId(it.uri))
-                        sharedPreferences.edit(true) {
-                            putString(settingName, childUri.toString())
-                        }
-
-                        setSummary()
-                    }
-
-                    val externPath = Helpers.FileInformation.getPath(requireContext(), uri)
-                    if (externPath != null) {
-                        // I found the file on the filesystem.
-                        // request permission to access it.
-                        Log.d(TAG, "Extern path found, now requesting permissions.")
-                        TedPermission.create()
-                            //.with(requireContext())
-                            .setPermissionListener(object : PermissionListener {
-                                override fun onPermissionGranted() {
-                                    sharedPreferences.edit(true) {
-                                        putString(settingName, Uri.fromFile(File(externPath)).toString())
-                                    }
-
-                                    setSummary()
-                                }
-
-                                override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {}
-                            })
-                            .setRationaleMessage(R.string.permission_rationale)
-                            .setDeniedMessage(R.string.permission_denied)
-                            .setPermissions(
-                                Manifest.permission.READ_EXTERNAL_STORAGE,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            ).check()
-                    }
-                }
-                PICK_PERSONALINI -> {
-                    DocumentFile.fromSingleUri(requireContext().applicationContext, data.data!!)?.let {
-                        // copy personal.ini into the data files directory.
-                        requireContext().contentResolver.copyFile(it.uri, File(requireContext().filesDir, "personal.ini").toUri())
-                    }
-                }
             }
         }
 

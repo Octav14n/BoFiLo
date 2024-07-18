@@ -142,7 +142,7 @@ class StoryDownloadHelper(
     }
     // If the script requests a website-quell-code this function gets called
     @SuppressWarnings("unused")
-    fun web_request(method: String, url: String, kargs: PyObject): String {
+    fun web_request(method: String, url: String, @Suppress("UNUSED_PARAMETER") kargs: PyObject): String {
         Thread.sleep(3000)
         return webRequest.webRequest(method, url)
         // Log.i(this::class.simpleName, "got return for url $url:\n\n$ret")
@@ -150,6 +150,7 @@ class StoryDownloadHelper(
 
     fun filename(value: String) { this.filename = value }
     // Gets called by the script if the requested site needs login information
+    @Suppress("UNUSED_PARAMETER")
     @SuppressWarnings("unused")
     fun get_login(passwordOnly: Boolean = false): Array<String> {
         // TODO implement user interaction to provide a password or (username and password).

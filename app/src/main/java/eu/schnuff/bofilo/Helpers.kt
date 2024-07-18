@@ -90,7 +90,7 @@ object Helpers {
                     val docId = DocumentsContract.getDocumentId(uri)
                     val split = docId.split(":").toTypedArray()
                     val type = split[0]
-                    var contentUri: Uri? = null
+                    val contentUri: Uri?
                     if ("image" == type) {
                         contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     } else if ("video" == type) {

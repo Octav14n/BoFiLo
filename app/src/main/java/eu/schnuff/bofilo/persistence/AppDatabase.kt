@@ -12,8 +12,8 @@ import eu.schnuff.bofilo.persistence.storylist.StoryListDao
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 
 private val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL("CREATE TABLE `file_wrapper_cache_item` (" +
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE `file_wrapper_cache_item` (" +
                 "`childId` TEXT NOT NULL, " +
                 "`parentUri` TEXT NOT NULL, " +
                 "`filename` TEXT NOT NULL, " +
@@ -22,8 +22,8 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
 }
 
 private val MIGRATION_2_3 = object : Migration(2, 3) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL("ALTER TABLE `story_list_item` ADD COLUMN forceDownload INTEGER NOT NULL DEFAULT(0)")
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `story_list_item` ADD COLUMN forceDownload INTEGER NOT NULL DEFAULT(0)")
     }
 }
 
