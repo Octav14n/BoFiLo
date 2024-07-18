@@ -28,6 +28,8 @@ jobs:
         run: touch local.properties
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Add Keystore
         env:
           LOCAL_PROPERTIES: ${{ secrets.SIGN_KEYSTORE }}
