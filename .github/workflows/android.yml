@@ -31,7 +31,7 @@ jobs:
       - name: Add Keystore
         env:
           LOCAL_PROPERTIES: ${{ secrets.SIGN_KEYSTORE }}
-        run: echo $LOCAL_PROPERTIES | base64 -d - > ../keystore.jks
+        run: echo "$LOCAL_PROPERTIES" | base64 -d - > ../keystore.jks
       - name: Add SigningConfig
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
