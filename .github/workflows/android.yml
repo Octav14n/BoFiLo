@@ -74,8 +74,10 @@ jobs:
           name: apkRelease
       - name: Generate release tag
         id: tag
-        run: echo "::set-output name=release_tag::CIBuild_$(date +"%Y.%m.%d_%H-%M")"
-      - name: Upload Release APK
+        run: echo "release_tag=CIBuild_$(date +"%Y.%m.%d_%H-%M")" >> $GITHUB_OUTPUT
+      - name: Find files
+        run: find -name "*.apk"
+      - name: Upload Debug and Release APK
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
