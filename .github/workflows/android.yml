@@ -36,10 +36,10 @@ jobs:
         run: echo -n "$LOCAL_PROPERTIES" | base64 -d > ../keystore.jks
       - name: Test Keystone
         run: md5sum ../keystore.jks
-      #- name: Test Keystore
-      #  env:
-      #    RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
-      #  run: keytool -list -storepass "$RELEASE_STORE_PASSWORD" -keystore ../keystore.jks
+      - name: Test Keystore
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
+        run: keytool -list -storepass "$RELEASE_STORE_PASSWORD" -keystore ../keystore.jks
       - name: Add SigningConfig
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
