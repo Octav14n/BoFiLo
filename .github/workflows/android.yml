@@ -49,7 +49,7 @@ jobs:
           > ~/.gradle/gradle.properties
       - name: Build APK release
         run: ./gradlew assembleRelease --stacktrace
-      - name: Build APK release
+      - name: Build APK debug
         run: ./gradlew assembleDebug --stacktrace
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
