@@ -48,7 +48,7 @@ jobs:
           $RELEASE_STORE_PASSWORD \
           $RELEASE_KEY_ALIAS \
           $RELEASE_KEY_PASSWORD \
-          > ~/.gradle/gradle.properties
+          >> gradle.properties
       - name: Build APK release
         run: ./gradlew assembleRelease --stacktrace
       - name: Build APK debug
