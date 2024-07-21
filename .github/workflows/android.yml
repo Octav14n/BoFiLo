@@ -44,7 +44,7 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.SIGN_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
         run: |
-          printf "releaseStoreFile=$(realpath $PWD/../keystore.jks)\nRELEASE_STORE_PASSWORD=%s\nRELEASE_KEY_ALIAS=%s\nRELEASE_KEY_PASSWORD=%s" \
+          printf "\nreleaseStoreFile=$(realpath $PWD/../keystore.jks)\nRELEASE_STORE_PASSWORD=%s\nRELEASE_KEY_ALIAS=%s\nRELEASE_KEY_PASSWORD=%s\n" \
           $RELEASE_STORE_PASSWORD \
           $RELEASE_KEY_ALIAS \
           $RELEASE_KEY_PASSWORD \
