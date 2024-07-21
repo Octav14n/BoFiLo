@@ -9,11 +9,6 @@ plugins {
     id("com.chaquo.python")
 }
 
-val releaseStoreFile: String by project
-val RELEASE_STORE_PASSWORD: String by project
-val RELEASE_KEY_ALIAS: String by project
-val RELEASE_KEY_PASSWORD: String by project
-
 android {
     val versionPropsFile = file("version.properties")
     var versionBuild: Int
@@ -54,12 +49,19 @@ android {
     if (hasProperty("releaseStoreFile")) {
         signingConfigs {
             create("release") {
+                val releaseStoreFile: String by project
+                val RELEASE_STORE_PASSWORD: String by project
+                val RELEASE_KEY_ALIAS: String by project
+                val RELEASE_KEY_PASSWORD: String by project
+
                 storeFile = file(releaseStoreFile)
                 storePassword = RELEASE_STORE_PASSWORD
                 keyAlias = RELEASE_KEY_ALIAS
                 keyPassword = RELEASE_KEY_PASSWORD
 
                 // Optional, specify signing versions used
+                enableV2Signing = true
+                enableV3Signing = true
                 enableV4Signing = true
             }
         }
@@ -101,9 +103,11 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            if (hasProperty("releaseStoreFile"))
+                signingConfig = signingConfigs.getByName("release")
         }
         debug {
+            applicationIdSuffix = ".debug"
             ndk {
                 isMinifyEnabled = false
                 abiFilters += listOf("x86", "x86_64")

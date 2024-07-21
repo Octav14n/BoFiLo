@@ -31,6 +31,7 @@ class StoryUnNewService(
 
     override suspend fun doWork(): Result {
         val itemUri = workerParameters.inputData.getString(EXTRA_PARAM_URI)?.toUri()
+        setForeground(createForegroundInfo(itemUri?.path ?: "", "initializing"))
 
         if (itemUri != null) {
             try {

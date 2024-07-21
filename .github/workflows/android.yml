@@ -35,7 +35,9 @@ jobs:
           LOCAL_PROPERTIES: ${{ secrets.SIGN_KEYSTORE }}
         run: echo -n "$LOCAL_PROPERTIES" | base64 -d > ../keystore.jks
       - name: Test Keystore
-        run: echo "6982abe881382cf8cee85fd9bd3fc2bb ../keystore.jks" | md5sum -c
+        env:
+          SHA256SUMS: ${{ secrets.SHA256SUMS }}
+        run: echo $SHA256SUMS | sha256sum -c
       - name: Add SigningConfig
         env:
           RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}

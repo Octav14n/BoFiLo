@@ -22,6 +22,7 @@ import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.security.InvalidParameterException
 import kotlin.concurrent.thread
@@ -74,7 +75,9 @@ class StoryDownloadService(
     private fun run(item: StoryListItem): Result {
         // This is where the magic happens
         Log.d(TAG, "worker started with url: '${item.url}'.")
-        setForegroundAsync(createForegroundInfo(null))
+        runBlocking {
+            setForeground(createForegroundInfo(null))
+        }
 
         // Show notification and stop Display-off from killing the service
         wakeLock.acquire(30000)
