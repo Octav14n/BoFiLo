@@ -42,12 +42,13 @@ object StoryWriteService {
         while (true) {
             try {
                 context.contentResolver.copyFile(srcUri, dstUri)
-                MediaScannerConnection.scanFile(
-                    context,
-                    arrayOf(dstUri.toFile().absolutePath),
-                    arrayOf(null),
-                    null
-                )
+                if (dstUri.scheme == "file")
+                    MediaScannerConnection.scanFile(
+                        context,
+                        arrayOf(dstUri.toFile().absolutePath),
+                        arrayOf(null),
+                        null
+                    )
                 break
             } catch (e: Exception) {
                 Log.e(this::class.simpleName, "Could not write to destination.", e)

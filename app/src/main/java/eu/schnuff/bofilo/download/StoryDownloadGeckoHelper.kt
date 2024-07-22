@@ -1,18 +1,28 @@
 package eu.schnuff.bofilo.download
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Message
+import android.provider.SyncStateContract
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.PermissionChecker
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.normal.TedPermission
 import eu.schnuff.bofilo.CaptchaActivity
+import eu.schnuff.bofilo.Constants
+import eu.schnuff.bofilo.Helpers
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.settings.Settings
 import org.json.JSONObject
@@ -142,7 +152,7 @@ object StoryDownloadGeckoHelper {
             ).apply {
                 putExtra(CaptchaActivity.INTENT_EXTRA_URL, url)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }, PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_INTERACTION_ID)
@@ -157,7 +167,32 @@ object StoryDownloadGeckoHelper {
             .build()
 
         with(NotificationManagerCompat.from(context)) {
-            notify(-1, notification)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                TedPermission.create()
+                    .setPermissions(Manifest.permission.POST_NOTIFICATIONS)
+                    .setPermissionListener(object : PermissionListener {
+                        @SuppressLint("MissingPermission")
+                        override fun onPermissionGranted() {
+                            notify(-1, notification)
+                        }
+
+                        override fun onPermissionDenied(deniedPermissions: List<String?>?) {
+                            Log.w("SDGH", "Permission POST_NOTIFICATIONS denied.")
+                        }
+
+                    })
+            } else {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.w("SDGH", "Permission POST_NOTIFICATIONS denied.")
+                    return
+                }
+                notify(-1, notification)
+            }
         }
     }
 

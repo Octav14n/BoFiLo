@@ -94,25 +94,36 @@ class SettingsActivity : AppCompatActivity() {
                 // I found the file on the filesystem.
                 // request permission to access it.
                 Log.d(TAG, "Extern path found, now requesting permissions.")
-                TedPermission.create()
-                    //.with(requireContext())
-                    .setPermissionListener(object : PermissionListener {
-                        override fun onPermissionGranted() {
-                            sharedPreferences.edit(true) {
-                                putString(settingName, Uri.fromFile(File(externPath)).toString())
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    TedPermission.create()
+                        //.with(requireContext())
+                        .setPermissionListener(object : PermissionListener {
+                            override fun onPermissionGranted() {
+                                sharedPreferences.edit(true) {
+                                    putString(
+                                        settingName,
+                                        Uri.fromFile(File(externPath)).toString()
+                                    )
+                                }
+
+                                setSummary()
                             }
 
-                            setSummary()
-                        }
+                            override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {}
+                        })
+                        .setRationaleMessage(R.string.permission_rationale)
+                        .setDeniedMessage(R.string.permission_denied)
+                        .setPermissions(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        ).check()
+                } else {
+                    sharedPreferences.edit(true) {
+                        putString(settingName, Uri.fromFile(File(externPath)).toString())
+                    }
 
-                        override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {}
-                    })
-                    .setRationaleMessage(R.string.permission_rationale)
-                    .setDeniedMessage(R.string.permission_denied)
-                    .setPermissions(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    ).check()
+                    setSummary()
+                }
             }
         }
 
@@ -120,13 +131,6 @@ class SettingsActivity : AppCompatActivity() {
             // Replace content with the settings configured in root_preferences.xml
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             setSummary()
-
-
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            }
 
             // Add custom actions...
             // ... to get the "default directory"

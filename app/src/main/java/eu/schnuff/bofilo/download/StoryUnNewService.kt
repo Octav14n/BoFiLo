@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -86,9 +87,7 @@ class StoryUnNewService(
         }
         val pendingIntent =
             PendingIntent.getActivity(context, 0, intent,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    PendingIntent.FLAG_IMMUTABLE
-                } else 0
+                PendingIntent.FLAG_IMMUTABLE
             )
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_unnew)
@@ -98,7 +97,10 @@ class StoryUnNewService(
             // Set the intent which will fire when the user taps the notification
             .setContentIntent(pendingIntent)
 
-        return ForegroundInfo(NOTIFICATION_ID, builder.build())
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            ForegroundInfo(NOTIFICATION_ID, builder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        else
+            ForegroundInfo(NOTIFICATION_ID, builder.build())
     }
 
     private fun createNotificationChannel() {
