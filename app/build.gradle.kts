@@ -54,6 +54,9 @@ android {
                 val RELEASE_KEY_ALIAS: String by project
                 val RELEASE_KEY_PASSWORD: String by project
 
+                if (!file(releaseStoreFile).exists() || RELEASE_STORE_PASSWORD == "" || RELEASE_KEY_ALIAS == "" || RELEASE_KEY_PASSWORD == "")
+                    throw GradleException("Signing not configured right.")
+
                 storeFile = file(releaseStoreFile)
                 storePassword = RELEASE_STORE_PASSWORD
                 keyAlias = RELEASE_KEY_ALIAS

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import eu.schnuff.bofilo.download.StoryDownloadService
@@ -28,10 +29,12 @@ class ShareUpdateActivity : AppCompatActivity() {
         // Handle potential new download request
         super.onNewIntent(intent)
 
-        if (intent.action == Intent.ACTION_SEND) {
+        if (intent.action == Intent.ACTION_SEND || intent.action == "eu.schnuff.bofilo.action.download") {
             intent.getStringExtra(Intent.EXTRA_TEXT)?.let {
                 scheduleDownload(this, it)
             }
+        } else {
+            Log.w(this::class.simpleName, "onNewIntent called with wrong action: " + intent.action)
         }
         finish()
     }

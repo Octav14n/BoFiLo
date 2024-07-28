@@ -47,6 +47,7 @@
                 <category android:name="android.intent.category.MAIN"/>
 
                 <action android:name="android.intent.action.SEND"/>
+                <action android:name="eu.schnuff.bofilo.action.download" />
 
                 <data android:mimeType="text/plain"/>
             </intent-filter>
