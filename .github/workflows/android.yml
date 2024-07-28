@@ -40,9 +40,9 @@ jobs:
         run: echo $SHA256SUMS | sha256sum -c
       - name: Add SigningConfig
         env:
-          RELEASE_STORE_PASSWORD: ${{ secrets.SIGN_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.SIGN_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           printf "\nreleaseStoreFile=$(realpath $PWD/../keystore.jks)\nRELEASE_STORE_PASSWORD=%s\nRELEASE_KEY_ALIAS=%s\nRELEASE_KEY_PASSWORD=%s\n" \
           $RELEASE_STORE_PASSWORD \

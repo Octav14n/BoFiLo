@@ -24,7 +24,7 @@ android {
         throw FileNotFoundException("Could not read version.properties!")
     }
     /*Wrapping inside a method avoids auto incrementing on every gradle task run. Now it runs only when we build apk*/
-    val autoIncrementBuildNumber = fun (){
+    val autoIncrementBuildNumber = fun() {
 
         if (versionPropsFile.canRead()) {
             val versionProps = Properties()
@@ -38,7 +38,7 @@ android {
     }
     // Hook to check if the release/debug task is among the tasks to be executed.
     //Let's make use of it
-    gradle.taskGraph.whenReady (closureOf<TaskExecutionGraph>{
+    gradle.taskGraph.whenReady(closureOf<TaskExecutionGraph> {
         if (this.hasTask("assembleDebug")) {  /* when run debug task */
             autoIncrementBuildNumber()
         } else if (this.hasTask("assembleRelease")) { /* when run release task */
@@ -54,6 +54,14 @@ android {
                 val RELEASE_KEY_ALIAS: String by project
                 val RELEASE_KEY_PASSWORD: String by project
 
+                if (!file(releaseStoreFile).exists())
+                    logger.warn("Signing: Release store file does not exist.")
+                if (RELEASE_STORE_PASSWORD == "")
+                    logger.warn("Signing: {} is empty.", "RELEASE_STORE_PASSWORD")
+                if (RELEASE_KEY_ALIAS == "")
+                    logger.warn("Signing: {} is empty.", "RELEASE_KEY_ALIAS")
+                if (RELEASE_KEY_PASSWORD == "")
+                    logger.warn("Signing: {} is empty.", "RELEASE_KEY_PASSWORD")
                 if (!file(releaseStoreFile).exists() || RELEASE_STORE_PASSWORD == "" || RELEASE_KEY_ALIAS == "" || RELEASE_KEY_PASSWORD == "")
                     throw GradleException("Signing not configured right.")
 
@@ -89,7 +97,7 @@ android {
         chaquopy {
             defaultConfig {
                 version = "3.10"
-                if(file("../venv/bin/python").isFile)
+                if (file("../venv/bin/python").isFile)
                     buildPython = listOf("../venv/bin/python")
                 pip {
                     install("-r", "requirements.txt")
@@ -105,7 +113,10 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             if (hasProperty("releaseStoreFile"))
                 signingConfig = signingConfigs.getByName("release")
         }
