@@ -15,7 +15,7 @@ geckoViewVersion = "+"
 workRuntimeKtx = "2.9.0"
 preferenceKtx = "1.2.1"
 roomKtx = "2.6.1"
-tedpermissionNormal = "3.3.0" #"125.0.20240425211020"
+tedpermissionNormal = "3.4.2" #"125.0.20240425211020"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
