@@ -12,6 +12,11 @@
     {
       "matches": ["*://*.fanfiction.net/*"],
       "js": ["main.js"]
+    },
+    {
+      "matches": ["*://challenges.cloudflare.com/*"],
+      "js": ["captcha.js"],
+      "all_frames": true
     }
   ],
   "permissions": [

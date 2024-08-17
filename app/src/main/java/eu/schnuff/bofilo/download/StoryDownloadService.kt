@@ -227,12 +227,15 @@ class StoryDownloadService(
                 viewModel.setForcedDownload(item, forceDownload)
 
                 val manager = WorkManager.getInstance(context)
-                manager.beginUniqueWork(
+                val op = manager.beginUniqueWork(
                     this::class.qualifiedName!!, ExistingWorkPolicy.KEEP,
                     OneTimeWorkRequestBuilder<StoryDownloadService>()
                         .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                         .build()
                 ).enqueue()
+                while (op.state.value !is Operation.State.SUCCESS) {
+                    Thread.sleep(250)
+                }
             }
         }
     }

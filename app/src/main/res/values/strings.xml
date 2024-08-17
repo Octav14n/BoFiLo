@@ -82,4 +82,7 @@
     <string name="acra_dialog_text">Unfortunately BoFiLo crashed. would you like to submit a bug report via e-mail?</string>
     <string name="acra_dialog_button_positive">Submit</string>
     <string name="acra_dialog_button_negative">Cancel</string>
+
+    <string name="captcha_waiting_for_webview">Loading…</string>
+    <string name="reload">Reload</string>
 </resources>

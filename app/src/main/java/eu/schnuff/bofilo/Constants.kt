@@ -17,4 +17,7 @@ object Constants {
     // Mime types
     const val MIME_EPUB = "application/epub+zip"
     const val MIME_INI = "*/*" // no idea what mime type .ini is, android tells me it is "text/plain" but I cant select the ini if I have set it to that.
+
+
+    const val NOTIFICATION_ID_CAPTCHA = 1
 }

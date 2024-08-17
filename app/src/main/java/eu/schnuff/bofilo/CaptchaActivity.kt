@@ -12,9 +12,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import eu.schnuff.bofilo.download.StoryDownloadGeckoHelper
 import eu.schnuff.bofilo.download.StoryDownloadService
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.mozilla.geckoview.GeckoView
 
 
@@ -26,18 +30,8 @@ class CaptchaActivity : AppCompatActivity() {
         @SuppressLint("SetJavaScriptEnabled")
         override fun onServiceConnected(p0: ComponentName, p1: IBinder) {
             webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
-            /*webView!!.run {
-                settings.apply {
-                    javaScriptEnabled = true
-                    useWideViewPort = true
-                    loadWithOverviewMode = true
-                    setSupportZoom(true)
-                    builtInZoomControls = true
-                    userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-                }
-                mainView.addView(this)
-            }*/
             webView.run {
+                mainView.removeAllViews()
                 mainView.addView(this)
                 layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             }
@@ -56,16 +50,42 @@ class CaptchaActivity : AppCompatActivity() {
         setContentView(R.layout.activity_captcha)
         mainView = findViewById(R.id.captchaMain)
 
-        bindService(Intent(this, StoryDownloadService::class.java), connection, Context.BIND_AUTO_CREATE)
+        bindService(
+            Intent(this, StoryDownloadService::class.java),
+            connection,
+            Context.BIND_AUTO_CREATE
+        )
+        webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
+        webView.run {
+            mainView.removeAllViews()
+            mainView.addView(this)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        }
+
+
+        findViewById<ImageButton>(R.id.reloadButton).setOnClickListener(object : View.OnClickListener {
+            override fun onClick(v: View?) {
+                StoryDownloadGeckoHelper.reInitWebView()
+                webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
+            }
+        })
+
+        findViewById<ImageButton>(R.id.reloadFloatingButton).setOnClickListener(object : View.OnClickListener {
+            override fun onClick(v: View?) {
+                StoryDownloadGeckoHelper.reInitWebView()
+                webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
+            }
+        })
+
 
         if (intent != null)
             onNewIntent(intent)
 
-        webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
+        /*webView.setSession(StoryDownloadGeckoHelper.getSession(this@CaptchaActivity))
         webView.run {
             mainView.addView(this)
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        }
+        }*/
     }
 
     companion object {
