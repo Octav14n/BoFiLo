@@ -89,6 +89,34 @@ android {
         setProperty("archivesBaseName", "BoFiLo_v$versionName")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Ref: https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split
+        splits {
+            // Configures multiple APKs based on ABI.
+            abi {
+                // Enables building multiple APKs per ABI.
+                var isRelease = false
+                gradle.startParameter.taskNames.find {
+                    // Enable split for release builds in different build flavors
+                    // (assemblePaidRelease, assembleFreeRelease, etc.).
+                    if (it.matches(Regex(".*assemble.*Release.*"))) {
+                        isRelease = true
+                        return@find true // break
+                    }
+
+                    return@find false // continue
+                }
+
+                isEnable = isRelease
+                // By default all ABIs are included, so use reset() and include to specify that we only
+                // want APKs for armeabi-v7a, x86, arm64-v8a and x86_64.
+                // Resets the list of ABIs that Gradle should create APKs for to none.
+                reset()
+                // Specifies a list of ABIs that Gradle should create APKs for.
+                include("armeabi-v7a", "arm64-v8a") //, "x86", "x86_64")
+                // Generate a universal APK that includes all ABIs, so user who installs from CI tool can use this one by default.
+                isUniversalApk = true
+            }
+        }
 
         ndk {
             //noinspection ChromeOsAbiSupport

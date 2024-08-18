@@ -4,7 +4,7 @@
 
 A Android frontend for https://github.com/JimmXinu/FanFicFare
 
-Download apk from ![](app/src/main/res/drawable-mdpi/ic_notification_download.png)[ releases](https://github.com/Octav14n/BoFiLo/releases)
+Download apk from ![](app/src/main/res/drawable-mdpi/ic_notification_download.png)[ releases](https://github.com/Octav14n/BoFiLo/releases), if you don't know which Version matches your device, use the one ending in "...-universal-release.apk"
 
 ## How to use this App
 
