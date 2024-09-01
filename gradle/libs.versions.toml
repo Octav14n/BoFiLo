@@ -16,6 +16,7 @@ workRuntimeKtx = "2.9.1"
 preferenceKtx = "1.2.1"
 roomKtx = "2.6.1"
 tedpermissionNormal = "3.4.2" #"125.0.20240425211020"
+chaquo = "15.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,5 +38,6 @@ tedpermission-normal = { group = "io.github.ParkSangGwon", name = "tedpermission
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+chaquo = { id = "com.chaquo.python", version.ref = "chaquo" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

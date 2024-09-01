@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ksp)
-    id("com.chaquo.python")
+    alias(libs.plugins.chaquo)
 }
 
 android {
@@ -39,9 +39,9 @@ android {
     // Hook to check if the release/debug task is among the tasks to be executed.
     //Let's make use of it
     gradle.taskGraph.whenReady(closureOf<TaskExecutionGraph> {
-        if (this.hasTask("assembleDebug")) {  /* when run debug task */
+        if (this.hasTask(":app:assembleDebug")) {  /* when run debug task */
             autoIncrementBuildNumber()
-        } else if (this.hasTask("assembleRelease")) { /* when run release task */
+        } else if (this.hasTask(":app:assembleRelease")) { /* when run release task */
             autoIncrementBuildNumber()
         }
     })
@@ -139,19 +139,24 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = true
+            /*isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
-            )
+            )*/
             if (hasProperty("releaseStoreFile"))
                 signingConfig = signingConfigs.getByName("release")
         }
         debug {
+            /*isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )*/
             applicationIdSuffix = ".debug"
             ndk {
-                isMinifyEnabled = false
                 abiFilters += listOf("x86", "x86_64")
             }
         }

@@ -22,9 +22,10 @@ import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.File
-import java.security.InvalidParameterException
 import kotlin.concurrent.thread
 
 
@@ -104,12 +105,17 @@ class StoryDownloadService(
             downloadHelper.run()
             outputBuilder.append(context.getString(R.string.console_finish_message).format(item.url))
         } catch (e: Throwable) {
+            Log.e(this::class.qualifiedName, "Error downloading", e)
             outputBuilder.append("Error downloading ${item.url}: ${e.message}:\n${e.localizedMessage}")
-            Toast.makeText(
-                context,
-                "Error downloading ${item.url}: ${e.message}:\n${e.localizedMessage}",
-                Toast.LENGTH_LONG
-            ).show()
+            runBlocking {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        "Error downloading ${item.url}: ${e.message}:\n${e.localizedMessage}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
             e.printStackTrace()
         } finally {
             // Reset everything for next download

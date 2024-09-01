@@ -20,6 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+-keep class eu.schnuff.bofilo.download.**
+
 -dontwarn java.beans.BeanInfo
 -dontwarn java.beans.FeatureDescriptor
 -dontwarn java.beans.IntrospectionException
