@@ -40,6 +40,7 @@
                 android:exported="true"
                 android:launchMode="singleTask"
                 android:excludeFromRecents="true"
+                android:noHistory="true"
                 android:taskAffinity=".ShareUpdateActivity"
                 android:theme="@style/Theme.NoView">
             <intent-filter>
@@ -57,6 +58,7 @@
                 android:name=".ShareUnNewActivity"
                 android:exported="true"
                 android:launchMode="singleTask"
+                android:excludeFromRecents="true"
                 android:noHistory="true"
                 android:taskAffinity=".ShareUnNewActivity"
                 android:theme="@style/Theme.NoView">

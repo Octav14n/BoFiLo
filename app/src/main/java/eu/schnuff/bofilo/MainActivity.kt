@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
         val extra = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
 
         when (intent.action) {
-            Intent.ACTION_SEND -> ShareUpdateActivity.scheduleDownload(this, extra)
+            Intent.ACTION_SEND, "eu.schnuff.bofilo.action.download" -> ShareUpdateActivity.scheduleDownload(this, extra)
             ShareUnNewActivity.INTENT -> ShareUnNewActivity.unNewStory(this, extra.toUri())
             else -> Log.w(this::class.simpleName, "Intent is not supported: " + intent.action)
         }
