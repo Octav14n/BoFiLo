@@ -13,7 +13,7 @@ android {
     val versionPropsFile = file("version.properties")
     var versionBuild: Int
     namespace = "eu.schnuff.bofilo"
-    compileSdk = 34
+    compileSdk = 35
 
     /*Setting default value for versionBuild which is the last incremented value stored in the file */
     if (versionPropsFile.canRead()) {
