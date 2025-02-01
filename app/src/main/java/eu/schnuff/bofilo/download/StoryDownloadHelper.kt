@@ -10,6 +10,7 @@ import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
+import java.nio.file.Files
 import kotlin.concurrent.thread
 
 class StoryDownloadHelper(
@@ -154,9 +155,13 @@ class StoryDownloadHelper(
     @SuppressWarnings("unused")
     fun get_login(passwordOnly: Boolean = false): Array<String> {
         // TODO implement user interaction to provide a password or (username and password).
-        add_output("\n! Site needs Login. This is not implemented at the moment. Use personal.ini instead.\n\n")
-        val password = "secret"
-        val username = "secret"
+        add_output("\n! Site needs Login. This is not implemented at the moment.")
+        if (File("personal.ini").exists())
+            add_output(" Add login details to personal.ini instead.\n\n")
+        else
+            add_output(" Use personal.ini instead.\n\n")
+        val password = ""
+        val username = ""
         return arrayOf(password, username)
     }
     // Gets called by the script if the requested site needs adult verification

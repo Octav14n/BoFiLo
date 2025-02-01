@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -58,17 +59,20 @@ class SettingsActivity : AppCompatActivity() {
             DocumentFile.fromSingleUri(requireContext(), data)?.let {
                 // copy personal.ini into the data files directory.
                 requireContext().contentResolver.copyFile(it.uri, File(requireContext().filesDir, "personal.ini").toUri())
+                Toast.makeText(requireContext(), "personal.ini successfully copied.", Toast.LENGTH_SHORT)
             }
         }
 
         private val resultLauncherDirectoryPickDefault = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
             if (data == null) return@registerForActivityResult
             persistDirToSettings(Constants.PREF_DEFAULT_DIRECTORY, data)
+            Toast.makeText(requireContext(), "directory set.", Toast.LENGTH_SHORT)
         }
 
         private val resultLauncherDirectoryPickSrc = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
             if (data == null) return@registerForActivityResult
             persistDirToSettings(Constants.PREF_DEFAULT_SRC_DIRECTORY, data)
+            Toast.makeText(requireContext(), "directory set.", Toast.LENGTH_SHORT)
         }
 
         private fun persistDirToSettings(settingName: String, uri: Uri) {

@@ -53,7 +53,7 @@ class StoryListAdapter(private val viewModel: StoryListViewModel) : RecyclerView
         if (item.finished) {
             // Hide progress items of finished downloads
             holder.binding.progress.visibility = View.GONE
-            holder.binding.progressText.visibility = View.GONE
+            holder.binding.progressText.text = "${item.max}"
         } else {
             // Handle items in the waiting queue
             val p = item.progress ?: 0
