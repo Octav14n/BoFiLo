@@ -1,22 +1,22 @@
 [versions]
-agp = "8.8.0"
-ksp = "2.0.20-1.0.25"
-kotlin = "2.0.20"
-coreKtx = "1.15.0"
+agp = "8.13.1"
+ksp = "2.2.21-2.0.4"
+kotlin = "2.2.21"
+coreKtx = "1.17.0"
 junit = "4.13.2"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-appcompat = "1.7.0"
-material = "1.12.0"
-commonsText = "1.13.0"
-sentryAndroid = "8.1.0"
-materialVersion = "1.7.5"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+appcompat = "1.7.1"
+material = "1.13.0"
+commonsText = "1.14.0"
+sentryAndroid = "8.27.1"
+materialVersion = "1.9.5"
 geckoViewVersion = "+"
-workRuntimeKtx = "2.10.0"
+workRuntimeKtx = "2.11.0"
 preferenceKtx = "1.2.1"
-roomKtx = "2.6.1"
+roomKtx = "2.8.4"
 tedpermissionNormal = "3.4.2" #"125.0.20240425211020"
-chaquo = "16.0.0"
+chaquo = "17.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +34,7 @@ androidx-preference-ktx = { group = "androidx.preference", name = "preference-kt
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomKtx"}
 tedpermission-normal = { group = "io.github.ParkSangGwon", name = "tedpermission-normal", version.ref = "tedpermissionNormal" }
+androidx-documentsfiles = { group = "androidx.documentfile", name = "documentfile", version = "1.1.0"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

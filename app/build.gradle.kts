@@ -13,7 +13,7 @@ android {
     val versionPropsFile = file("version.properties")
     var versionBuild: Int
     namespace = "eu.schnuff.bofilo"
-    compileSdk = 35
+    compileSdk = 36
 
     /*Setting default value for versionBuild which is the last incremented value stored in the file */
     if (versionPropsFile.canRead()) {
@@ -82,7 +82,7 @@ android {
 
     defaultConfig {
         applicationId = "eu.schnuff.bofilo"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 10
         versionName = "$versionCode.${"%04d".format(versionBuild)}"
@@ -112,7 +112,11 @@ android {
                 // Resets the list of ABIs that Gradle should create APKs for to none.
                 reset()
                 // Specifies a list of ABIs that Gradle should create APKs for.
-                include("armeabi-v7a", "arm64-v8a") //, "x86", "x86_64")
+                if (isRelease) {
+                    include("arm64-v8a")
+                } else {
+                    include("x86_64")
+                }
                 // Generate a universal APK that includes all ABIs, so user who installs from CI tool can use this one by default.
                 isUniversalApk = true
             }
@@ -120,11 +124,11 @@ android {
 
         ndk {
             //noinspection ChromeOsAbiSupport
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            abiFilters += listOf("arm64-v8a",  "x86_64")
         }
         chaquopy {
             defaultConfig {
-                version = "3.10"
+                version = "3.12"
                 if (file("../venv/bin/python").isFile)
                     buildPython = listOf("../venv/bin/python")
                 pip {
@@ -157,7 +161,7 @@ android {
             )*/
             applicationIdSuffix = ".debug"
             ndk {
-                abiFilters += listOf("x86", "x86_64")
+                abiFilters += listOf("x86_64")
             }
         }
     }
@@ -184,6 +188,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.tedpermission.normal)
     implementation(libs.material)
+    implementation(libs.androidx.documentsfiles)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
