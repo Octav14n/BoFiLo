@@ -14,7 +14,7 @@ materialVersion = "1.7.5"
 geckoViewVersion = "+"
 workRuntimeKtx = "2.10.0"
 preferenceKtx = "1.2.1"
-roomKtx = "2.6.1"
+roomKtx = "2.8.4"
 tedpermissionNormal = "3.4.2" #"125.0.20240425211020"
 chaquo = "16.0.0"
 
