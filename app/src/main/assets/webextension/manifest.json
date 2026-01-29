@@ -10,7 +10,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.fanfiction.net/*"],
+      "matches": ["*://*.fanfiction.net/*", "*://archiveofourown.org/*"],
       "js": ["main.js"]
     },
     {

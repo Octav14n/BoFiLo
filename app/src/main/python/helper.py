@@ -191,8 +191,8 @@ class MyFetcher(fanficfare.fetchers.base_fetcher.Fetcher):
 # This function wraps the adapter and story
 def my_get_adapter(config, url, anyurl=False):
     adapter = originalGetAdapter(config, url, anyurl)
-    if adapter.getSiteDomain() == 'www.fanfiction.net':
-        print("Site is FanFiction.net, injecting custom fetcher.")
+    if adapter.getSiteDomain() in ['www.fanfiction.net', 'archiveofourown.org']:
+        print("Site is " + adapter.getSiteDomain() + ", injecting custom fetcher.")
         config.fetcher = MyFetcher(config.getConfig, config.getConfigList)
     if get_handler():
         get_handler().start(adapter.url)

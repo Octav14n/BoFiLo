@@ -15,6 +15,9 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.appbar.AppBarLayout
 import eu.schnuff.bofilo.download.StoryDownloadGeckoHelper
 import eu.schnuff.bofilo.download.StoryDownloadService
 import kotlinx.coroutines.runBlocking
@@ -86,6 +89,12 @@ class CaptchaActivity : AppCompatActivity() {
             mainView.addView(this)
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }*/
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(R.id.appbar)) { view, insets ->
+            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(0, statusBars.top, 0, 0)
+            insets
+        }
     }
 
     companion object {

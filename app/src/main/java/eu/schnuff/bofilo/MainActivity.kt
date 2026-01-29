@@ -17,6 +17,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.databinding.ActivityMainBinding
@@ -53,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Initiate View
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         settings = Settings(this)
         setContentView(binding.root)
@@ -128,6 +132,13 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Downloads scheduled.", Snackbar.LENGTH_SHORT).show()
                     //.setAction("Action", null)
         }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.appbar) { view, insets ->
+            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(0, statusBars.top, 0, 0)
+            insets
+        }
+
     }
 
     override fun onNewIntent(intent: Intent) {

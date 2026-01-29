@@ -149,7 +149,10 @@ object StoryDownloadGeckoHelper {
             if (ret.isNullOrEmpty())
                 continue
 
-            if (ret.contains("| FanFiction</title>") || ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>")) {
+            if (
+                ret.contains("| FanFiction</title>") ||
+                ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>") ||
+                ret.contains("<img alt=\"Archive of Our Own\"")) {
                 // handler.sendEmptyMessage(1)
                 NotificationManagerCompat.from(context).cancel(Constants.NOTIFICATION_ID_CAPTCHA)
                 return ret

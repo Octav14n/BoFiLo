@@ -9,11 +9,9 @@ plugins {
     alias(libs.plugins.chaquo)
 }
 
-android {
+base {
     val versionPropsFile = file("version.properties")
     var versionBuild: Int
-    namespace = "eu.schnuff.bofilo"
-    compileSdk = 36
 
     /*Setting default value for versionBuild which is the last incremented value stored in the file */
     if (versionPropsFile.canRead()) {
@@ -23,9 +21,8 @@ android {
     } else {
         throw FileNotFoundException("Could not read version.properties!")
     }
-    /*Wrapping inside a method avoids auto incrementing on every gradle task run. Now it runs only when we build apk*/
-    val autoIncrementBuildNumber = fun() {
 
+    val autoIncrementBuildNumber = fun() {
         if (versionPropsFile.canRead()) {
             val versionProps = Properties()
             versionProps.load(FileInputStream(versionPropsFile))
@@ -36,6 +33,8 @@ android {
             throw FileNotFoundException("Could not read version.properties!")
         }
     }
+
+    /*Wrapping inside a method avoids auto incrementing on every gradle task run. Now it runs only when we build apk*/
     // Hook to check if the release/debug task is among the tasks to be executed.
     //Let's make use of it
     gradle.taskGraph.whenReady(closureOf<TaskExecutionGraph> {
@@ -45,6 +44,15 @@ android {
             autoIncrementBuildNumber()
         }
     })
+
+    val versionCode = 10
+    version = "$versionCode.${"%04d".format(versionBuild)}"
+    archivesName = "BoFiLo_v$version"
+}
+
+android {
+    namespace = "eu.schnuff.bofilo"
+    compileSdk = 36
 
     if (hasProperty("releaseStoreFile")) {
         signingConfigs {
@@ -83,10 +91,7 @@ android {
     defaultConfig {
         applicationId = "eu.schnuff.bofilo"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 10
-        versionName = "$versionCode.${"%04d".format(versionBuild)}"
-        setProperty("archivesBaseName", "BoFiLo_v$versionName")
+        targetSdk = 36
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Ref: https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split
@@ -126,16 +131,6 @@ android {
             //noinspection ChromeOsAbiSupport
             abiFilters += listOf("arm64-v8a",  "x86_64")
         }
-        chaquopy {
-            defaultConfig {
-                version = "3.12"
-                if (file("../venv/bin/python").isFile)
-                    buildPython = listOf("../venv/bin/python")
-                pip {
-                    install("-r", "requirements.txt")
-                }
-            }
-        }
     }
 
     buildFeatures {
@@ -166,11 +161,22 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
+    kotlin {
+        jvmToolchain(21)
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.12"
+        if (file("../venv/bin/python").isFile)
+            buildPython = listOf("../venv/bin/python")
+        pip {
+            install("-r", "requirements.txt")
+        }
     }
 }
 
