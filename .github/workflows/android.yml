@@ -20,7 +20,7 @@ jobs:
       - name: Setup venv
         run: python -m venv venv
       - name: Setup JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: 17
