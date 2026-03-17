@@ -1,179 +1,149 @@
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.chaquo)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "2.3.2"
+    id("com.chaquo.python") version "17.0.0"
 }
 
-base {
-    val versionPropsFile = file("version.properties")
-    var versionBuild: Int
+val gVersionPropsFile = file("version.properties")
+var gVersionBuild: Int = 0
 
-    /*Setting default value for versionBuild which is the last incremented value stored in the file */
-    if (versionPropsFile.canRead()) {
+if (gVersionPropsFile.canRead()) {
+    val versionProps = Properties()
+    versionProps.load(FileInputStream(gVersionPropsFile))
+    gVersionBuild = (versionProps["VERSION_BUILD"] as String).toInt()
+} else {
+    throw FileNotFoundException("Could not read version.properties!")
+}
+
+val autoIncrementBuildNumber = {
+    if (gVersionPropsFile.canRead()) {
         val versionProps = Properties()
-        versionProps.load(FileInputStream(versionPropsFile))
-        versionBuild = (versionProps["VERSION_BUILD"] as String).toInt()
+        versionProps.load(FileInputStream(gVersionPropsFile))
+        gVersionBuild = (versionProps["VERSION_BUILD"] as String).toInt() + 1
+        versionProps["VERSION_BUILD"] = gVersionBuild.toString()
+        versionProps.store(gVersionPropsFile.writer(), null)
     } else {
         throw FileNotFoundException("Could not read version.properties!")
     }
-
-    val autoIncrementBuildNumber = fun() {
-        if (versionPropsFile.canRead()) {
-            val versionProps = Properties()
-            versionProps.load(FileInputStream(versionPropsFile))
-            versionBuild = (versionProps["VERSION_BUILD"] as String).toInt() + 1
-            versionProps["VERSION_BUILD"] = versionBuild.toString()
-            versionProps.store(versionPropsFile.writer(), null)
-        } else {
-            throw FileNotFoundException("Could not read version.properties!")
-        }
-    }
-
-    /*Wrapping inside a method avoids auto incrementing on every gradle task run. Now it runs only when we build apk*/
-    // Hook to check if the release/debug task is among the tasks to be executed.
-    //Let's make use of it
-    gradle.taskGraph.whenReady(closureOf<TaskExecutionGraph> {
-        if (this.hasTask(":app:assembleDebug")) {  /* when run debug task */
-            autoIncrementBuildNumber()
-        } else if (this.hasTask(":app:assembleRelease")) { /* when run release task */
-            autoIncrementBuildNumber()
-        }
-    })
-
-    val versionCode = 10
-    version = "$versionCode.${"%04d".format(versionBuild)}"
-    archivesName = "BoFiLo_v$version"
 }
 
-android {
+gradle.taskGraph.whenReady {
+    if (this.hasTask(":app:assembleDebug") || this.hasTask(":app:assembleRelease")) {
+        autoIncrementBuildNumber()
+    }
+}
+
+val gVersionCode = 10
+val gVersion = "$gVersionCode.${"%04d".format(gVersionBuild)}"
+logger.info("Building Version {}", version)
+
+base {
+    archivesName = "BoFiLo_v$gVersion"
+}
+
+configure<ApplicationExtension> {
     namespace = "eu.schnuff.bofilo"
     compileSdk = 36
-
-    if (hasProperty("releaseStoreFile")) {
-        signingConfigs {
-            create("release") {
-                val releaseStoreFile: String by project
-                val RELEASE_STORE_PASSWORD: String by project
-                val RELEASE_KEY_ALIAS: String by project
-                val RELEASE_KEY_PASSWORD: String by project
-
-                if (!file(releaseStoreFile).exists())
-                    logger.warn("Signing: Release store file does not exist.")
-                if (RELEASE_STORE_PASSWORD == "")
-                    logger.warn("Signing: {} is empty.", "RELEASE_STORE_PASSWORD")
-                if (RELEASE_KEY_ALIAS == "")
-                    logger.warn("Signing: {} is empty.", "RELEASE_KEY_ALIAS")
-                if (RELEASE_KEY_PASSWORD == "")
-                    logger.warn("Signing: {} is empty.", "RELEASE_KEY_PASSWORD")
-                if (!file(releaseStoreFile).exists() || RELEASE_STORE_PASSWORD == "" || RELEASE_KEY_ALIAS == "" || RELEASE_KEY_PASSWORD == "")
-                    throw GradleException("Signing not configured right.")
-
-                storeFile = file(releaseStoreFile)
-                storePassword = RELEASE_STORE_PASSWORD
-                keyAlias = RELEASE_KEY_ALIAS
-                keyPassword = RELEASE_KEY_PASSWORD
-
-                // Optional, specify signing versions used
-                enableV2Signing = true
-                enableV3Signing = true
-                enableV4Signing = true
-            }
-        }
-        println("Signing file found. Singing config active.")
-    } else
-        println("No Release file found.")
 
     defaultConfig {
         applicationId = "eu.schnuff.bofilo"
         minSdk = 26
         targetSdk = 36
+        versionCode = gVersionCode
+        versionName = gVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        // Ref: https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split
+
         splits {
-            // Configures multiple APKs based on ABI.
             abi {
-                // Enables building multiple APKs per ABI.
-                var isRelease = false
-                gradle.startParameter.taskNames.find {
-                    // Enable split for release builds in different build flavors
-                    // (assemblePaidRelease, assembleFreeRelease, etc.).
-                    if (it.matches(Regex(".*assemble.*Release.*"))) {
-                        isRelease = true
-                        return@find true // break
-                    }
-
-                    return@find false // continue
-                }
-
-                isEnable = isRelease
-                // By default all ABIs are included, so use reset() and include to specify that we only
-                // want APKs for armeabi-v7a, x86, arm64-v8a and x86_64.
-                // Resets the list of ABIs that Gradle should create APKs for to none.
                 reset()
-                // Specifies a list of ABIs that Gradle should create APKs for.
-                if (isRelease) {
-                    include("arm64-v8a")
-                } else {
-                    include("x86_64")
-                }
-                // Generate a universal APK that includes all ABIs, so user who installs from CI tool can use this one by default.
+                include("arm64-v8a", "x86_64")
                 isUniversalApk = true
             }
         }
 
         ndk {
-            //noinspection ChromeOsAbiSupport
-            abiFilters += listOf("arm64-v8a",  "x86_64")
+            abiFilters += listOf("arm64-v8a", "x86_64")
         }
     }
 
     buildFeatures {
         viewBinding = true
     }
+
+    signingConfigs {
+        create("release") {
+            if (hasProperty("releaseStoreFile")) {
+                        val releaseStoreFile: String by project
+                        val RELEASE_STORE_PASSWORD: String by project
+                        val RELEASE_KEY_ALIAS: String by project
+                        val RELEASE_KEY_PASSWORD: String by project
+
+                        if (!file(releaseStoreFile).exists())
+                            logger.warn("Signing: Release store file does not exist.")
+                        if (RELEASE_STORE_PASSWORD == "")
+                            logger.warn("Signing: {} is empty.", "RELEASE_STORE_PASSWORD")
+                        if (RELEASE_KEY_ALIAS == "")
+                            logger.warn("Signing: {} is empty.", "RELEASE_KEY_ALIAS")
+                        if (RELEASE_KEY_PASSWORD == "")
+                            logger.warn("Signing: {} is empty.", "RELEASE_KEY_PASSWORD")
+                        if (!file(releaseStoreFile).exists() || RELEASE_STORE_PASSWORD == "" || RELEASE_KEY_ALIAS == "" || RELEASE_KEY_PASSWORD == "")
+                            throw GradleException("Signing not configured right.")
+
+                        storeFile = file(releaseStoreFile)
+                        storePassword = RELEASE_STORE_PASSWORD
+                        keyAlias = RELEASE_KEY_ALIAS
+                        keyPassword = RELEASE_KEY_PASSWORD
+
+                        // Optional, specify signing versions used
+                        enableV2Signing = true
+                        enableV3Signing = true
+                        enableV4Signing = true
+                println("Signing file found. Singing config active.")
+            } else
+                println("No Release file found.")
+        }
+    }
+
     buildTypes {
         release {
-            /*isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
-            )*/
-            if (hasProperty("releaseStoreFile"))
-                signingConfig = signingConfigs.getByName("release")
+            )
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            /*isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )*/
             applicationIdSuffix = ".debug"
-            ndk {
-                abiFilters += listOf("x86_64")
-            }
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlin {
-        jvmToolchain(21)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
 chaquopy {
     defaultConfig {
         version = "3.12"
-        if (file("../venv/bin/python").isFile)
+        if (file("../venv/bin/python").isFile) {
             buildPython = listOf("../venv/bin/python")
+        }
         pip {
             install("-r", "requirements.txt")
         }
@@ -181,12 +151,10 @@ chaquopy {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.commons.text)
     implementation(libs.sentry.android)
-    // GeckoView
     implementation(libs.geckoview)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.preference.ktx)
