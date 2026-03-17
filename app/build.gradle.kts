@@ -63,6 +63,7 @@ configure<ApplicationExtension> {
 
         splits {
             abi {
+                isEnable = true
                 reset()
                 include("arm64-v8a", "x86_64")
                 isUniversalApk = true
@@ -122,6 +123,11 @@ configure<ApplicationExtension> {
             signingConfig = signingConfigs.getByName("release")
         }
         debug {
+            splits {
+                abi {
+                    isEnable = false
+                }
+            }
             applicationIdSuffix = ".debug"
         }
     }
