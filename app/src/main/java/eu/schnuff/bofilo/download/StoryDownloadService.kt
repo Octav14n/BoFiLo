@@ -95,6 +95,7 @@ class StoryDownloadService(
             outputBuilder,
             settings.isAdult,
             settings.saveCache,
+            settings.includeImages,
             this,
             this,
             item

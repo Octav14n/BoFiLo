@@ -52,9 +52,9 @@ class Handler:
     def __init__(self, url: str):
         self.chapters_now = 0
         self.chapters_max = None
-        self.title = None
+        self._title = None
         self.url = url
-        self.filename = None
+        self._filename = None
         self.output = ''
         self.is_finished = False
 
@@ -72,6 +72,12 @@ class Handler:
     def web_request(self, method, url, **kargs):
         print('can not perform web request "%s" for url "%s", args: ' % (method, url), kargs)
         raise NotImplementedError('can not perform web request "%s" for url "%s" [args: %s]' % (method, url, str(kargs)))
+
+    def title(self, value):
+        self._title = value
+
+    def filename(self, value):
+        self._filename = value
 
     def is_adult(self):
         return False
@@ -210,7 +216,7 @@ def get_handler() -> Handler:
     return handlers.get(threading.get_ident(), None)
 
 
-def start(my_handler, url, save_cache=False, forceDownload=False):
+def start(my_handler, url, save_cache=False, forceDownload=False, include_images="false"):
     # set Kotlin-Service interface
     handlers[threading.get_ident()] = my_handler if my_handler is not None else Handler(url)
     # modify FanFicFare to inject custom code
@@ -233,9 +239,13 @@ def start(my_handler, url, save_cache=False, forceDownload=False):
         options.insert(0, '--force')
         print('using parameters -U --force')
 
+    # Prepend app-controlled settings before user's personal.ini
+    app_ini = "\n[defaults]\ninclude_images: %s\n" % include_images
+    effective_ini = app_ini + (personal_ini or "")
+
     # run FanFicFare cli version.
     try:
-        fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
+        fanficfare.cli.main(options, passed_personalini=effective_ini, passed_defaultsini=default_ini)
         get_handler().finish(True)
     except Exception as e:
         if get_handler():

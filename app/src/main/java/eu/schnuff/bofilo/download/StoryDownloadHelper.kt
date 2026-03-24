@@ -24,6 +24,7 @@ class StoryDownloadHelper(
     private val consoleOutput: StringBuilder,
     private val isAdult: Boolean,
     private val isSaveCache: Boolean,
+    private val includeImages: String,
     private val fileInteraction: FileInteraction,
     private val webRequest: StoryDownloadWebRequest,
     item: StoryListItem
@@ -78,7 +79,7 @@ class StoryDownloadHelper(
         try {
             // Start the python-part of the service (including FanFicFare)
             val argument = originalFile?.name ?: item.url
-            helper.callAttr("start", this, argument, isSaveCache, item.forceDownload)
+            helper.callAttr("start", this, argument, isSaveCache, item.forceDownload, includeImages)
             viewModel.setForcedDownload(item, false)
         } catch (e: Exception) {
             viewModel.setTitle(item, e.message ?: e.toString())
