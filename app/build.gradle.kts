@@ -6,8 +6,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp") version "2.3.2"
+    id("com.google.devtools.ksp") version "2.3.6"
     id("com.chaquo.python") version "17.0.0"
 }
 
@@ -48,6 +47,7 @@ base {
     archivesName = "BoFiLo_v$gVersion"
 }
 
+
 configure<ApplicationExtension> {
     namespace = "eu.schnuff.bofilo"
     compileSdk = 36
@@ -60,15 +60,6 @@ configure<ApplicationExtension> {
         versionName = gVersion
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        splits {
-            abi {
-                isEnable = true
-                reset()
-                include("arm64-v8a", "x86_64")
-                isUniversalApk = true
-            }
-        }
 
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")
@@ -113,6 +104,15 @@ configure<ApplicationExtension> {
         }
     }
 
+    splits {
+        abi {
+            isEnable = gradle.startParameter.taskNames.any { it.contains("Release") }
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -120,14 +120,12 @@ configure<ApplicationExtension> {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+
+            if (hasProperty("releaseStoreFile")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
-            splits {
-                abi {
-                    isEnable = false
-                }
-            }
             applicationIdSuffix = ".debug"
         }
     }
