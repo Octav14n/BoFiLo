@@ -22,6 +22,13 @@
 
 -keep class eu.schnuff.bofilo.download.**
 
+# Chaquopy calls these methods from Python by their JVM names.
+-keep class eu.schnuff.bofilo.download.StoryDownloadHelper { *; }
+
+# No value in obfuscating an open-source app; disabling prevents
+# the Python-Kotlin bridge from breaking when method names are renamed.
+-dontobfuscate
+
 -dontwarn java.beans.BeanInfo
 -dontwarn java.beans.FeatureDescriptor
 -dontwarn java.beans.IntrospectionException
