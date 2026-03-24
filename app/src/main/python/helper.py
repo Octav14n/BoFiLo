@@ -25,17 +25,18 @@ class MyStdOut:
 sys.stdout = MyStdOut(sys.stdout)
 sys.stderr = MyStdOut(sys.stderr, "\nError: ")
 
-import fanficfare.fetchers.base_fetcher
-import fanficfare.cli
+import compat
 import os
 import threading
 
+# Validate FanFicFare internals at import time
+compat.verify()
+
 # read defaults.ini
-with open(os.path.dirname(fanficfare.__file__) + '/defaults.ini', 'r', encoding="utf-8") as f:
-    default_ini = f.read()
+default_ini = compat.read_defaults_ini()
 # no personal ini provided by default
 personal_ini = None
-originalGetAdapter = fanficfare.cli.adapters.getAdapter
+originalGetAdapter = compat.get_original_get_adapter()
 handlers = dict()
 handler_thread_ident = 0
 
@@ -45,16 +46,16 @@ def my_call(*popenargs, timeout=None, **kwargs):
     pass
 
 
-fanficfare.cli.call = my_call
+compat.patch_call(my_call)
 
 
 class Handler:
     def __init__(self, url: str):
         self.chapters_now = 0
         self.chapters_max = None
-        self.title = None
+        self._title = None
         self.url = url
-        self.filename = None
+        self._filename = None
         self.output = ''
         self.is_finished = False
 
@@ -82,6 +83,12 @@ class Handler:
     def add_output(self, txt: str):
         self.output += txt
 
+    def title(self, value: str):
+        self._title = value
+
+    def filename(self, value: str):
+        self._filename = value
+
     def finish(self, success):
         self.is_finished = True
 
@@ -92,23 +99,21 @@ class MyStory(object):
         self.story = story
         self.handler = get_handler()
 
-    def addChapter(self, chap, newchap=False):
-        self.story.addChapter(chap, newchap)
-        # print('story Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
+    def addChapter(self, *args, **kwargs):
+        self.story.addChapter(*args, **kwargs)
         if self.handler:
             self.handler.chapters(len(self.story.chapters), self.story.getChapterCount())
 
-    def setMetadata(self, key, value, condremoveentities=True):
-        self.story.setMetadata(key, value, condremoveentities)
+    def setMetadata(self, key, value, *args, **kwargs):
+        self.story.setMetadata(key, value, *args, **kwargs)
         if self.handler:
             if key == 'numChapters':
                 self.handler.chapters(0, self.story.getChapterCount())
             elif key == 'title':
                 self.handler.title(value)
-                # print("Story Chapter count: %d" % self._maxChapterCount)
 
-    def formatFileName(self, template, allowunsafefilename=True):
-        filename = self.story.formatFileName(template, allowunsafefilename)
+    def formatFileName(self, *args, **kwargs):
+        filename = self.story.formatFileName(*args, **kwargs)
         if self.handler:
             self.handler.filename(filename)
         return filename
@@ -120,8 +125,6 @@ class MyStory(object):
             setattr(self.story, key, value)
 
     def __getattr__(self, attr):
-        # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
-        # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
         return getattr(self.story, attr)
 
 
@@ -131,11 +134,11 @@ class MyAdapter(object):
         self.adapter = adapter
         self.handler = get_handler()
 
-    def getStoryMetadataOnly(self, get_cover=True):
+    def getStoryMetadataOnly(self, *args, **kwargs):
         for _ in range(0, 2 if self.handler else 1):
             try:
-                return self.adapter.getStoryMetadataOnly(get_cover)
-            except fanficfare.cli.exceptions.FailedToLogin as f:
+                return self.adapter.getStoryMetadataOnly(*args, **kwargs)
+            except compat.FailedToLogin as f:
                 if not self.handler:
                     raise f
                 if f.passwdonly:
@@ -144,7 +147,7 @@ class MyAdapter(object):
                 else:
                     print('Login Failed, Need Username/Password.')
                     [self.adapter.password, self.adapter.username] = self.handler.get_login(False)
-            except fanficfare.cli.exceptions.AdultCheckRequired as e:
+            except compat.AdultCheckRequired as e:
                 if self.handler and self.handler.is_adult():
                     self.adapter.is_adult = True
                 else:
@@ -157,34 +160,26 @@ class MyAdapter(object):
             setattr(self.adapter, key, value)
 
     def __getattr__(self, attr):
-        # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
-        # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
         return getattr(self.adapter, attr)
 
 
-class MyFetcher(fanficfare.fetchers.base_fetcher.Fetcher):
+class MyFetcher(compat.Fetcher):
     def __init__(self, get_config_fn, get_config_list_fn):
         super(MyFetcher, self).__init__(get_config_fn, get_config_list_fn)
         self.handler = get_handler()
 
     def request(self, *args, **kargs):
-        # print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
-        ret = fanficfare.fetchers.base_fetcher.FetcherResponse(
+        ret = compat.FetcherResponse(
             self.handler.web_request(args[0], args[1], kargs),
             args[0],
             False
         )
-        # print(ret.content)
         return ret
 
     def __setattr__(self, key, value):
-        # print("Fetcher setattr fetcher.%s = %s" % (str(key), str(value)))
         super(MyFetcher, self).__setattr__(key, value)
 
     def __getattr__(self, attr):
-        # print('Fetcher getattr fetcher.%s' % attr)
-        # print('story.%s: (%s)' % (attr, str(getattr(self.story, attr))))
-        # print('  -> Chapter %d / %d' % (len(self.story.chapters), self.story.getChapterCount()))
         return getattr(super(MyFetcher, self), attr)
 
 
@@ -210,19 +205,13 @@ def get_handler() -> Handler:
     return handlers.get(threading.get_ident(), None)
 
 
-def start(my_handler, url, save_cache=False, forceDownload=False):
+def start(my_handler, url, save_cache=False, forceDownload=False, include_images="false"):
     # set Kotlin-Service interface
     handlers[threading.get_ident()] = my_handler if my_handler is not None else Handler(url)
     # modify FanFicFare to inject custom code
-    fanficfare.cli.adapters.getAdapter = my_get_adapter
-    # print("Now starting Story with url '%s'." % url)
+    compat.patch_get_adapter(my_get_adapter)
     options = [
         '--progressbar',
-        # '--meta-only',
-        # '--json-meta',
-        # '--no-meta-chapters',
-        # '--progress',
-        # '--debug',
         '--update-epub' if not forceDownload else '-U',
         '--non-interactive',
         url
@@ -233,9 +222,13 @@ def start(my_handler, url, save_cache=False, forceDownload=False):
         options.insert(0, '--force')
         print('using parameters -U --force')
 
+    # Prepend app setting before user's personal.ini so personal.ini can override.
+    app_ini = "\n[defaults]\ninclude_images: %s\n" % include_images
+    effective_ini = app_ini + (personal_ini or "")
+
     # run FanFicFare cli version.
     try:
-        fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
+        compat.cli_main(options, passed_personalini=effective_ini, passed_defaultsini=default_ini)
         get_handler().finish(True)
     except Exception as e:
         if get_handler():
@@ -248,7 +241,7 @@ def unnew(filepath):
         '--unnew',
         filepath
     ]
-    fanficfare.cli.main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
+    compat.cli_main(options, passed_personalini=personal_ini, passed_defaultsini=default_ini)
 
 
 if __name__ == "__main__":
@@ -256,5 +249,4 @@ if __name__ == "__main__":
     personal_ini_path = expanduser('~/.fanficfare/personal.ini')
     if os.path.isfile(personal_ini_path):
         read_personal_ini(personal_ini_path)
-    # start(None, 'https://fictionhunt.com/stories/b8kmkn3/the-champion-reading-i', False)
     start(None, 'https://www.royalroad.com/fictions/best-rated', False)
