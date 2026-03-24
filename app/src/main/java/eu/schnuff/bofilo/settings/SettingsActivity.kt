@@ -1,6 +1,5 @@
 package eu.schnuff.bofilo.settings
 
-import android.Manifest
 import android.content.ContentResolver
 import android.content.Intent
 import android.content.SharedPreferences
@@ -19,9 +18,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
-import com.gun0912.tedpermission.PermissionListener
-import com.gun0912.tedpermission.normal.TedPermission
-//import com.gun0912.tedpermission.TedPermissionUtil
 import eu.schnuff.bofilo.Constants
 import eu.schnuff.bofilo.Helpers
 import eu.schnuff.bofilo.Helpers.copyFile
@@ -95,39 +91,11 @@ class SettingsActivity : AppCompatActivity() {
 
             val externPath = Helpers.FileInformation.getPath(requireContext(), uri)
             if (externPath != null) {
-                // I found the file on the filesystem.
-                // request permission to access it.
-                Log.d(TAG, "Extern path found, now requesting permissions.")
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    TedPermission.create()
-                        //.with(requireContext())
-                        .setPermissionListener(object : PermissionListener {
-                            override fun onPermissionGranted() {
-                                sharedPreferences.edit(true) {
-                                    putString(
-                                        settingName,
-                                        Uri.fromFile(File(externPath)).toString()
-                                    )
-                                }
-
-                                setSummary()
-                            }
-
-                            override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {}
-                        })
-                        .setRationaleMessage(R.string.permission_rationale)
-                        .setDeniedMessage(R.string.permission_denied)
-                        .setPermissions(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        ).check()
-                } else {
-                    sharedPreferences.edit(true) {
-                        putString(settingName, Uri.fromFile(File(externPath)).toString())
-                    }
-
-                    setSummary()
+                Log.d(TAG, "Extern path found.")
+                sharedPreferences.edit(true) {
+                    putString(settingName, Uri.fromFile(File(externPath)).toString())
                 }
+                setSummary()
             }
         }
 

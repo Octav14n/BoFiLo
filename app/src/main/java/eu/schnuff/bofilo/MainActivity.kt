@@ -5,10 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -44,15 +41,6 @@ class MainActivity : AppCompatActivity() {
             onNewIntent(intent)
             if (isFinishing)
                 return
-        }
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()) {
-            //todo when permission is granted
-        } else {
-            //request for the permission
-            val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            intent.data = Uri.fromParts("package", packageName, null)
-            startActivity(intent)
         }
 
         // Initiate View
