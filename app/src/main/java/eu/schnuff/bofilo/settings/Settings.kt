@@ -16,6 +16,9 @@ class Settings (context: Context) {
     val isAdult
     get() = p.getBoolean(Constants.PREF_IS_ADULT, false)
 
+    val includeImages: String
+    get() = p.getString(Constants.PREF_INCLUDE_IMAGES, "false") ?: "false"
+
     val saveCache
     get() = p.getBoolean(Constants.PREF_SAVE_CACHE, false)
 
