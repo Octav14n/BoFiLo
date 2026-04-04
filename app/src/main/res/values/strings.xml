@@ -9,16 +9,7 @@
     <string name="permission_rationale">The storage access is used to directly access your epubs, this will speed up the
         operation extremely
     </string>
-    <string name="permission_denied">We will use indirect access to your epubs, this will slow down the operation
-        extremely
-    </string>
-    <string name="list_action_title">Action:</string>
-    <array name="list_actions">
-        <item>Restart</item>
-        <item>Un-new</item>
-        <item>Force download</item>
-        <item>Delete</item>
-    </array>
+    <string name="permission_denied">We will use indirect access to your epubs, this will slow down the operation extremely</string>
     <string name="download_started_success">Scheduled download of "%s"</string>
 
     <!-- Services -->
@@ -85,4 +76,8 @@
 
     <string name="captcha_waiting_for_webview">Loading…</string>
     <string name="reload">Reload</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_unnew">Un-New</string>
+    <string name="action_force_download">Force Download</string>
+    <string name="action_delete">Delete</string>
 </resources>

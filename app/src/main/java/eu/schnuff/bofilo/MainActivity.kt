@@ -14,7 +14,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -28,10 +27,11 @@ import eu.schnuff.bofilo.download.StoryUnNewService
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
-import eu.schnuff.bofilo.settings.SettingsActivity
+import eu.schnuff.bofilo.ui.StoryActionInterface
+import eu.schnuff.bofilo.ui.StoryListAdapter
 import kotlin.concurrent.thread
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), StoryActionInterface {
     private lateinit var adapter: StoryListAdapter
     private lateinit var storyListViewModel: StoryListViewModel
     private lateinit var binding: ActivityMainBinding
@@ -58,34 +58,24 @@ class MainActivity : AppCompatActivity() {
         // Initiate View
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        settings = Settings(this)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        settings = Settings(this)
 
         // Initiate RecyclerView
         var initializedOldDownloads = false
         storyListViewModel = StoryListViewModel(application)
-        adapter = StoryListAdapter(storyListViewModel)
-        adapter.onLongClick = { item ->
-            AlertDialog.Builder(this).apply {
-                //setTitle(R.string.list_action_title)
-                setItems(R.array.list_actions) { dialog, which ->
-                    when (which) {
-                        0 -> thread {
-                            scheduleDownload(item.url)
-                        }
-                        1 -> unNewStory(item)
-                        2 -> thread {
-                            scheduleDownload(item.url, true)
-                        }
-                        3 -> storyListViewModel.remove(item)
-                    }
-                    dialog.dismiss()
-                }
-                create()
-                show()
-            }
-        }
+        adapter = StoryListAdapter()
+        adapter.setCallback(this)
+
         storyListViewModel.allItems.observe(this) {
             if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
@@ -96,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 initializedOldDownloads = true
             }
-            adapter.setAll(it)
+            adapter.setStories(it)
         }
         binding.storyList.adapter = adapter
         (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
@@ -131,12 +121,6 @@ class MainActivity : AppCompatActivity() {
 
             Snackbar.make(view, "Downloads scheduled.", Snackbar.LENGTH_SHORT).show()
                     //.setAction("Action", null)
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.appbar) { view, insets ->
-            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            view.setPadding(0, statusBars.top, 0, 0)
-            insets
         }
 
     }
@@ -194,5 +178,21 @@ class MainActivity : AppCompatActivity() {
             R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun restart(story: StoryListItem) {
+        scheduleDownload(story.url)
+    }
+
+    override fun unnew(story: StoryListItem) {
+        unNewStory(story)
+    }
+
+    override fun forcedownload(story: StoryListItem) {
+        scheduleDownload(story.url, true)
+    }
+
+    override fun delete(story: StoryListItem) {
+        storyListViewModel.remove(story)
     }
 }

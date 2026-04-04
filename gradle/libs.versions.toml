@@ -15,6 +15,7 @@ preferenceKtx = "1.2.1"
 roomKtx = "2.8.4"
 tedpermissionNormal = "3.4.2" #"125.0.20240425211020"
 chaquo = "17.0.0"
+cardview = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +34,7 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomKtx"}
 tedpermission-normal = { group = "io.github.ParkSangGwon", name = "tedpermission-normal", version.ref = "tedpermissionNormal" }
 androidx-documentsfiles = { group = "androidx.documentfile", name = "documentfile", version = "1.1.0"}
+androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

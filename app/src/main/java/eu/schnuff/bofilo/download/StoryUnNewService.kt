@@ -13,7 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.work.*
 import com.chaquo.python.Python
-import eu.schnuff.bofilo.Helpers.copyFile
+import eu.schnuff.bofilo.utils.Helpers.copyFile
 import eu.schnuff.bofilo.MainActivity
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper

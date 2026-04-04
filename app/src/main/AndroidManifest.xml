@@ -72,7 +72,7 @@
 
 
         <activity
-                android:name=".settings.SettingsActivity"
+                android:name=".SettingsActivity"
                 android:exported="true"
                 android:label="@string/title_activity_settings"
                 android:parentActivityName=".MainActivity">

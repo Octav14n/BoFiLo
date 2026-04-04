@@ -1,29 +1,16 @@
 package eu.schnuff.bofilo.download
 
-import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
-import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.Build
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_DEFERRED
 import androidx.core.net.toFile
-import androidx.core.net.toUri
-import androidx.work.*
-import eu.schnuff.bofilo.Helpers.copyFile
-import eu.schnuff.bofilo.MainActivity
-import eu.schnuff.bofilo.R
+import eu.schnuff.bofilo.utils.Helpers.copyFile
 import eu.schnuff.bofilo.download.filewrapper.FileWrapper
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
-import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import java.io.File
 
 private const val EXTRA_PARAM_SRC_URI = "srcUri"

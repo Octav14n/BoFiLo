@@ -2,8 +2,9 @@
 <resources>
     <color name="colorPrimary">#0E3D00</color>
     <color name="colorPrimaryDark">#003029</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorAccent">#32D300</color>
     <color name="listBackground">#2A8BC34A</color>
     <color name="colorListProgressNormal">#0E3D00</color>
-    <color name="colorListProgressForce">#32003D</color>
+    <color name="colorListProgressForce">#AB0221</color>
+    <color name="colorIconTint">#ffffff</color>
 </resources>

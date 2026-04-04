@@ -1,5 +1,6 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
-    <dimen name="list_margin">5dp</dimen>
-    <dimen name="list_padding">11dp</dimen>
+    <dimen name="list_margin">16dp</dimen>
+    <dimen name="list_padding">16dp</dimen>
+    <dimen name="corner_radius">16dp</dimen>
 </resources>

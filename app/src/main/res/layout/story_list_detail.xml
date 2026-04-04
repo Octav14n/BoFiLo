@@ -1,50 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:tools="http://schemas.android.com/tools"
-                                                   android:layout_width="match_parent"
-                                                   android:layout_height="wrap_content"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   android:layout_margin="@dimen/list_margin"
-                                                   android:layout_marginEnd="0dp"
-                                                   android:backgroundTint="@color/listBackground"
-                                                   android:clickable="true"
-                                                   android:focusable="true"
-                                                   app:cardCornerRadius="5dp"
->
-    <LinearLayout android:orientation="vertical"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:padding="@dimen/list_padding">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/header" android:textAlignment="center"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" tools:text="Titel"/>
-        <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/url"
-                    tools:text="http://Prow scuttle parrel provost Sail ho shrouds spirits boom mizzenmast yardarm."
-                    android:layout_weight="1"/>
-            <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:id="@+id/progress_text" android:layout_weight="0"
-                    tools:text="4 / 50" android:visibility="gone"
-                    tools:visibility="visible"
-                    android:layout_marginStart="@dimen/list_margin"
-                    android:layout_gravity="bottom"
-                    android:textStyle="bold"/>
-        </LinearLayout>
-        <ProgressBar
-                style="?android:attr/progressBarStyleHorizontal"
+    <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/listBackground"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardCornerRadius="@dimen/corner_radius"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/progress" android:indeterminate="true"
-                android:indeterminateTint="@color/colorPrimary" android:visibility="gone"
-                android:indeterminateBehavior="repeat"
-                tools:progress="5" tools:max="20" tools:visibility="visible"/>
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+                android:layout_margin="@dimen/list_padding"
+                android:id="@+id/container">
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/title"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    tools:text="Titel"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/moreIcon"
+                    android:singleLine="true" />
+
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/url"
+                    tools:text="http://Prow scuttle parrel provost Sail ho shrouds spirits boom mizzenmast yardarm."
+                    app:layout_constraintTop_toBottomOf="@+id/moreIcon"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/moreIcon" />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/progress_text"
+                    tools:text="4 / 50"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:textStyle="bold"
+                    app:layout_constraintTop_toBottomOf="@+id/url"
+                    app:layout_constraintEnd_toEndOf="@+id/url"
+                    android:layout_marginTop="8dp" />
+
+
+            <ProgressBar
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:id="@+id/progress"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/colorAccent"
+                    android:visibility="gone"
+                    android:indeterminateBehavior="repeat"
+                    tools:progress="5"
+                    tools:max="20"
+                    tools:visibility="visible"
+                    app:layout_constraintEnd_toStartOf="@+id/progress_text"
+                    app:layout_constraintStart_toStartOf="@+id/url"
+                    app:layout_constraintBottom_toBottomOf="@+id/progress_text"
+                    app:layout_constraintTop_toTopOf="@+id/progress_text" />
+
+            <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    app:srcCompat="@drawable/icon_more_vert"
+                    android:id="@+id/moreIcon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:padding="8dp"
+                    android:tint="@color/colorIconTint"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
