@@ -12,8 +12,9 @@
             android:id="@+id/cardView2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/list_margin"
-            android:padding="16dp"
+            android:layout_marginStart="@dimen/list_margin"
+            android:layout_marginEnd="@dimen/list_margin"
+            android:layout_marginBottom="@dimen/list_margin"
             app:cardCornerRadius="36dp"
             app:cardBackgroundColor="?attr/colorPrimary"
             app:layout_constraintEnd_toEndOf="parent"
@@ -41,14 +42,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/app_name"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
             <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="?attr/colorPrimary"
-                    app:popupTheme="@style/AppTheme.PopupOverlay"
+                    android:foregroundTint="?attr/colorOnPrimary"
                     app:menu="@menu/menu_main" />
         </LinearLayout>
 
@@ -58,7 +59,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:layout_margin="@dimen/list_margin"
             android:layout_below="@+id/cardView2">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -78,6 +78,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_marginTop="8dp"
+                android:layout_margin="@dimen/list_margin"
                 app:cardCornerRadius="@dimen/corner_radius"
                 android:backgroundTint="#000000">
 
