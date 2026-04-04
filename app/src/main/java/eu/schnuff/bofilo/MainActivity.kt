@@ -32,10 +32,12 @@ import eu.schnuff.bofilo.ui.StoryListAdapter
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity(), StoryActionInterface {
-    private lateinit var adapter: StoryListAdapter
+    private lateinit var storyListAdapter: StoryListAdapter
     private lateinit var storyListViewModel: StoryListViewModel
     private lateinit var binding: ActivityMainBinding
     private lateinit var settings: Settings
+
+    private lateinit var mainMenu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,8 +75,8 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
         // Initiate RecyclerView
         var initializedOldDownloads = false
         storyListViewModel = StoryListViewModel(application)
-        adapter = StoryListAdapter()
-        adapter.setCallback(this)
+        storyListAdapter = StoryListAdapter()
+        storyListAdapter.setCallback(this)
 
         storyListViewModel.allItems.observe(this) {
             if (!initializedOldDownloads) {
@@ -86,28 +88,12 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
                 }
                 initializedOldDownloads = true
             }
-            adapter.setStories(it)
+            storyListAdapter.setStories(it)
         }
-        binding.storyList.adapter = adapter
+        binding.storyList.adapter = storyListAdapter
         (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
-        // Initiate console
-        storyListViewModel.consoleOutput.observe(this) {
-            // Test if console shall be shown
-            if (settings.showConsole) {
-                if (it == "") {
-                    // if no text is available then hide the console
-                    binding.consoleOutputScroll.visibility = View.GONE
-                } else {
-                    // show the text and scroll to the newest entry
-                    binding.consoleOutput.text = it
-                    binding.consoleOutputScroll.visibility = View.VISIBLE
-                }
-            }
-        }
-        binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
-            binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
-        }
+        initializeConsole()
 
         // For debugging purposes the Icon in the bottom right starts many downloads
         binding.fab.setOnClickListener { view ->
@@ -125,6 +111,11 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        initializeConsole()
+    }
+
     override fun onNewIntent(intent: Intent) {
         // Handle potential new download request
         Log.d(this::class.simpleName, "Got new intent: %s --> %s".format(intent.action, intent.extras.toString()))
@@ -140,6 +131,58 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
 
         finish()
         //moveTaskToBack(true)
+    }
+
+
+    /**
+     * This method hides the console window if the user disabled it.
+     * If it is enabled, the listeners are initialized.
+     */
+    private fun initializeConsole() {
+        if (!settings.showConsole) {
+            setConsoleVisibility(false)
+            return
+        }
+        // Initiate console
+        handleConsoleVisibility(storyListViewModel.consoleOutput.value?: "")
+        storyListViewModel.consoleOutput.observe(this) {
+            handleConsoleVisibility(it)
+        }
+        binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
+            binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    /**
+     * This method handles incoming text for the console window.
+     * If the incoming text is blank, the console window is hidden.
+     */
+    private fun handleConsoleVisibility(text: String) {
+        // Test if console shall be shown
+        if (text.isBlank()) {
+            // if no text is available then hide the console
+            setConsoleVisibility(false)
+        } else {
+            // show the text and scroll to the newest entry
+            binding.consoleOutput.text = text
+            setConsoleVisibility(true)
+        }
+    }
+
+    /**
+     * Handles the visibility of the console itself.
+     * It also enables/disables the associated menu entry
+     */
+    private fun setConsoleVisibility(visible: Boolean) {
+        if(visible) {
+            binding.consoleOutputContainer.visibility = View.VISIBLE
+        } else {
+            binding.consoleOutputContainer.visibility = View.GONE
+        }
+
+        if(this::mainMenu.isInitialized) {
+            mainMenu.findItem(R.id.action_hide_console)?.isVisible = visible
+        }
     }
 
     private fun scheduleDownload(url: String, force: Boolean = false) {
@@ -165,6 +208,12 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
+        mainMenu = menu
+
+        // the menu initializes late. Therefore, the console initialization has already happened.
+        // we hide the console entry for now. When the console content changes, we will reenable it
+        // again.
+        menu.findItem(R.id.action_hide_console)?.isVisible = false
         return true
     }
 
@@ -176,9 +225,14 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
             R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
             R.id.action_reset -> { storyListViewModel.removeAll(); true }
             R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
+            R.id.action_hide_console -> {
+                setConsoleVisibility(false)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 
     override fun restart(story: StoryListItem) {
         scheduleDownload(story.url)

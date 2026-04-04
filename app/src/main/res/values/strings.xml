@@ -80,4 +80,5 @@
     <string name="action_unnew">Un-New</string>
     <string name="action_force_download">Force Download</string>
     <string name="action_delete">Delete</string>
+    <string name="action_hide_console">Hide Console</string>
 </resources>

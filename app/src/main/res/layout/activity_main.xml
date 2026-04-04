@@ -73,9 +73,11 @@
                 android:layout_height="0dp" />
 
         <androidx.cardview.widget.CardView
+                android:id="@+id/consoleOutputContainer"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:layout_marginTop="8dp"
                 app:cardCornerRadius="@dimen/corner_radius"
                 android:backgroundTint="#000000">
 
@@ -91,8 +93,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_margin="@dimen/list_margin"
-                        android:padding="@dimen/list_padding"
-                        android:background="@android:color/transparent">
+                        android:padding="@dimen/list_padding">
 
                     <TextView
                             android:layout_width="match_parent"
