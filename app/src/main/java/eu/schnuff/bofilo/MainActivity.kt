@@ -4,6 +4,7 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,12 +14,14 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.databinding.ActivityMainBinding
@@ -30,6 +33,7 @@ import eu.schnuff.bofilo.settings.Settings
 import eu.schnuff.bofilo.ui.StoryActionInterface
 import eu.schnuff.bofilo.ui.StoryListAdapter
 import kotlin.concurrent.thread
+
 
 class MainActivity : AppCompatActivity(), StoryActionInterface {
     private lateinit var storyListAdapter: StoryListAdapter
@@ -61,8 +65,8 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+
+        prepareToolbarMenu()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -205,31 +209,27 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        mainMenu = menu
+    private fun prepareToolbarMenu() {
 
-        // the menu initializes late. Therefore, the console initialization has already happened.
-        // we hide the console entry for now. When the console content changes, we will reenable it
-        // again.
-        menu.findItem(R.id.action_hide_console)?.isVisible = false
-        return true
-    }
+        binding.moreButton.setOnClickListener {
+            val menu = PopupMenu(this@MainActivity, binding.moreButton)
+            mainMenu = menu.menu
+            // Inflating popup menu from popup_menu.xml file
+            menu.menuInflater.inflate(R.menu.menu_main, mainMenu)
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
-            R.id.action_reset -> { storyListViewModel.removeAll(); true }
-            R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
-            R.id.action_hide_console -> {
-                setConsoleVisibility(false)
-                true
+            menu.setOnMenuItemClickListener { item: MenuItem ->
+                when (item.itemId) {
+                    R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
+                    R.id.action_reset -> { storyListViewModel.removeAll(); true }
+                    R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
+                    R.id.action_hide_console -> {
+                        setConsoleVisibility(false)
+                        true
+                    }
+                    else -> super.onOptionsItemSelected(item)
+                }
             }
-            else -> super.onOptionsItemSelected(item)
+            menu.show()
         }
     }
 
