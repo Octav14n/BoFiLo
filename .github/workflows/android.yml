@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/v6
+        uses: actions/checkout@v6
       - name: Generate new Version
         run: sed -E -i 's/^(VERSION_BUILD=)([0-9]+)$/echo "\1$((\2+1))"/e' app/version.properties
       - name: Push
