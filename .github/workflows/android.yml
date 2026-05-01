@@ -106,8 +106,8 @@ jobs:
         run: sed -E -i 's/^(VERSION_BUILD=)([0-9]+)$/echo "\1$((\2+1))"/e' app/version.properties
       - name: Push
         run: |
-          git config user.name github-action
-          git config user.email github-actions@github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/version.properties
           git commit -m "Increase Version [skip ci]"
           git push
