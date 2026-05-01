@@ -4,14 +4,12 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.PopupMenu
@@ -21,7 +19,6 @@ import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import eu.schnuff.bofilo.databinding.ActivityMainBinding
@@ -41,7 +38,7 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
     private lateinit var binding: ActivityMainBinding
     private lateinit var settings: Settings
 
-    private lateinit var mainMenu: Menu
+    private var mainMenu: PopupMenu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -184,9 +181,13 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
             binding.consoleOutputContainer.visibility = View.GONE
         }
 
-        if(this::mainMenu.isInitialized) {
-            mainMenu.findItem(R.id.action_hide_console)?.isVisible = visible
+        if(mainMenu == null) {
+            // early exit
+            return
         }
+
+        val item = mainMenu?.menu?.findItem(R.id.action_close_console)
+        item?.isVisible = visible
     }
 
     private fun scheduleDownload(url: String, force: Boolean = false) {
@@ -211,25 +212,25 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
 
     private fun prepareToolbarMenu() {
 
-        binding.moreButton.setOnClickListener {
-            val menu = PopupMenu(this@MainActivity, binding.moreButton)
-            mainMenu = menu.menu
-            // Inflating popup menu from popup_menu.xml file
-            menu.menuInflater.inflate(R.menu.menu_main, mainMenu)
+        mainMenu = PopupMenu(this@MainActivity, binding.moreButton)
+        // Inflating popup menu from popup_menu.xml file
+        mainMenu?.menuInflater?.inflate(R.menu.menu_main, mainMenu?.menu)
 
-            menu.setOnMenuItemClickListener { item: MenuItem ->
+        binding.moreButton.setOnClickListener {
+
+            mainMenu?.setOnMenuItemClickListener { item: MenuItem ->
                 when (item.itemId) {
                     R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
                     R.id.action_reset -> { storyListViewModel.removeAll(); true }
                     R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
-                    R.id.action_hide_console -> {
+                    R.id.action_close_console -> {
                         setConsoleVisibility(false)
                         true
                     }
                     else -> super.onOptionsItemSelected(item)
                 }
             }
-            menu.show()
+            mainMenu?.show()
         }
     }
 
