@@ -1,4 +1,4 @@
-package eu.schnuff.bofilo
+package eu.schnuff.bofilo.utils
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -12,6 +12,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.lang.Long
 
 private const val CONTENT_SCHEME = ContentResolver.SCHEME_CONTENT
 
@@ -80,7 +81,7 @@ object Helpers {
                         }
                         else -> {
                             val contentUri = ContentUris.withAppendedId(
-                                Uri.parse("content://downloads/public_downloads"), java.lang.Long.valueOf(id)
+                                Uri.parse("content://downloads/public_downloads"), Long.valueOf(id)
                             )
                             getDataColumn(context, contentUri, null, null)
                         }

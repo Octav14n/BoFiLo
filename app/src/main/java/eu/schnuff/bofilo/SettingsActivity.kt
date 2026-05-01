@@ -1,4 +1,4 @@
-package eu.schnuff.bofilo.settings
+package eu.schnuff.bofilo
 
 import android.Manifest
 import android.content.ContentResolver
@@ -15,26 +15,38 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.gun0912.tedpermission.PermissionListener
 import com.gun0912.tedpermission.normal.TedPermission
-//import com.gun0912.tedpermission.TedPermissionUtil
-import eu.schnuff.bofilo.Constants
-import eu.schnuff.bofilo.Helpers
-import eu.schnuff.bofilo.Helpers.copyFile
-import eu.schnuff.bofilo.R
+import eu.schnuff.bofilo.utils.Helpers.copyFile
+import eu.schnuff.bofilo.databinding.ActivitySettingsBinding
+import eu.schnuff.bofilo.utils.Helpers
 import java.io.File
 
-
 class SettingsActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Replace content with the settings configured in root_preferences.xml
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
+        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.settings, SettingsFragment())
@@ -52,24 +64,30 @@ class SettingsActivity : AppCompatActivity() {
         private val sharedPreferences: SharedPreferences
             get() = PreferenceManager.getDefaultSharedPreferences(requireContext().applicationContext)
 
-        private val resultLauncherPickPersonalIni = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        private val resultLauncherPickPersonalIni = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()) { result ->
             val data = result.data?.data
             if (result.resultCode != RESULT_OK || data == null)
                 return@registerForActivityResult
             DocumentFile.fromSingleUri(requireContext(), data)?.let {
                 // copy personal.ini into the data files directory.
-                requireContext().contentResolver.copyFile(it.uri, File(requireContext().filesDir, "personal.ini").toUri())
+                requireContext().contentResolver.copyFile(it.uri, File(
+                    requireContext().filesDir,
+                    "personal.ini"
+                ).toUri())
                 Toast.makeText(requireContext(), "personal.ini successfully copied.", Toast.LENGTH_SHORT)
             }
         }
 
-        private val resultLauncherDirectoryPickDefault = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
+        private val resultLauncherDirectoryPickDefault = registerForActivityResult(
+            ActivityResultContracts.OpenDocumentTree()) { data ->
             if (data == null) return@registerForActivityResult
             persistDirToSettings(Constants.PREF_DEFAULT_DIRECTORY, data)
             Toast.makeText(requireContext(), "directory set.", Toast.LENGTH_SHORT)
         }
 
-        private val resultLauncherDirectoryPickSrc = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { data ->
+        private val resultLauncherDirectoryPickSrc = registerForActivityResult(
+            ActivityResultContracts.OpenDocumentTree()) { data ->
             if (data == null) return@registerForActivityResult
             persistDirToSettings(Constants.PREF_DEFAULT_SRC_DIRECTORY, data)
             Toast.makeText(requireContext(), "directory set.", Toast.LENGTH_SHORT)
@@ -154,7 +172,7 @@ class SettingsActivity : AppCompatActivity() {
                     putExtra(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                         DocumentsContract.EXTRA_INITIAL_URI else "android.provider.extra.INITIAL_URI",
                         MediaStore.Files.getContentUri("external"))
-                        
+
                     type = Constants.MIME_INI
                 }
 

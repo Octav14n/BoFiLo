@@ -10,11 +10,10 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.PopupMenu
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
@@ -28,14 +27,18 @@ import eu.schnuff.bofilo.download.StoryUnNewService
 import eu.schnuff.bofilo.persistence.storylist.StoryListItem
 import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
-import eu.schnuff.bofilo.settings.SettingsActivity
+import eu.schnuff.bofilo.ui.StoryActionInterface
+import eu.schnuff.bofilo.ui.StoryListAdapter
 import kotlin.concurrent.thread
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var adapter: StoryListAdapter
+
+class MainActivity : AppCompatActivity(), StoryActionInterface {
+    private lateinit var storyListAdapter: StoryListAdapter
     private lateinit var storyListViewModel: StoryListViewModel
     private lateinit var binding: ActivityMainBinding
     private lateinit var settings: Settings
+
+    private var mainMenu: PopupMenu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,34 +61,24 @@ class MainActivity : AppCompatActivity() {
         // Initiate View
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        settings = Settings(this)
         setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
+
+        prepareToolbarMenu()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        settings = Settings(this)
 
         // Initiate RecyclerView
         var initializedOldDownloads = false
         storyListViewModel = StoryListViewModel(application)
-        adapter = StoryListAdapter(storyListViewModel)
-        adapter.onLongClick = { item ->
-            AlertDialog.Builder(this).apply {
-                //setTitle(R.string.list_action_title)
-                setItems(R.array.list_actions) { dialog, which ->
-                    when (which) {
-                        0 -> thread {
-                            scheduleDownload(item.url)
-                        }
-                        1 -> unNewStory(item)
-                        2 -> thread {
-                            scheduleDownload(item.url, true)
-                        }
-                        3 -> storyListViewModel.remove(item)
-                    }
-                    dialog.dismiss()
-                }
-                create()
-                show()
-            }
-        }
+        storyListAdapter = StoryListAdapter()
+        storyListAdapter.setCallback(this)
+
         storyListViewModel.allItems.observe(this) {
             if (!initializedOldDownloads) {
                 // if this is the first call then enqueue all non finished items for downloading.
@@ -96,28 +89,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 initializedOldDownloads = true
             }
-            adapter.setAll(it)
+            storyListAdapter.setStories(it)
         }
-        binding.storyList.adapter = adapter
+        binding.storyList.adapter = storyListAdapter
         (binding.storyList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
-        // Initiate console
-        storyListViewModel.consoleOutput.observe(this) {
-            // Test if console shall be shown
-            if (settings.showConsole) {
-                if (it == "") {
-                    // if no text is available then hide the console
-                    binding.consoleOutputScroll.visibility = View.GONE
-                } else {
-                    // show the text and scroll to the newest entry
-                    binding.consoleOutput.text = it
-                    binding.consoleOutputScroll.visibility = View.VISIBLE
-                }
-            }
-        }
-        binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
-            binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
-        }
+        initializeConsole()
 
         // For debugging purposes the Icon in the bottom right starts many downloads
         binding.fab.setOnClickListener { view ->
@@ -133,12 +110,11 @@ class MainActivity : AppCompatActivity() {
                     //.setAction("Action", null)
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.appbar) { view, insets ->
-            val statusBars = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            view.setPadding(0, statusBars.top, 0, 0)
-            insets
-        }
+    }
 
+    override fun onResume() {
+        super.onResume()
+        initializeConsole()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -156,6 +132,62 @@ class MainActivity : AppCompatActivity() {
 
         finish()
         //moveTaskToBack(true)
+    }
+
+
+    /**
+     * This method hides the console window if the user disabled it.
+     * If it is enabled, the listeners are initialized.
+     */
+    private fun initializeConsole() {
+        if (!settings.showConsole) {
+            setConsoleVisibility(false)
+            return
+        }
+        // Initiate console
+        handleConsoleVisibility(storyListViewModel.consoleOutput.value?: "")
+        storyListViewModel.consoleOutput.observe(this) {
+            handleConsoleVisibility(it)
+        }
+        binding.consoleOutputScroll.viewTreeObserver.addOnGlobalLayoutListener {
+            binding.consoleOutputScroll.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    /**
+     * This method handles incoming text for the console window.
+     * If the incoming text is blank, the console window is hidden.
+     */
+    private fun handleConsoleVisibility(text: String) {
+        // Test if console shall be shown
+        if (text.isBlank()) {
+            // if no text is available then hide the console
+            setConsoleVisibility(false)
+        } else {
+            // show the text and scroll to the newest entry
+            binding.consoleOutput.text = text
+            setConsoleVisibility(true)
+        }
+    }
+
+    /**
+     * Handles the visibility of the console itself.
+     * It also enables/disables the associated menu entry
+     */
+    private fun setConsoleVisibility(visible: Boolean) {
+        if(visible) {
+            binding.consoleOutputContainer.visibility = View.VISIBLE
+        } else {
+            binding.consoleOutputContainer.visibility = View.GONE
+        }
+
+        if(mainMenu == null) {
+            // early exit
+            return
+        }
+
+        val item = mainMenu?.menu?.findItem(R.id.action_close_console)
+        item?.isVisible = visible
     }
 
     private fun scheduleDownload(url: String, force: Boolean = false) {
@@ -178,21 +210,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
+    private fun prepareToolbarMenu() {
+
+        mainMenu = PopupMenu(this@MainActivity, binding.moreButton)
+        // Inflating popup menu from popup_menu.xml file
+        mainMenu?.menuInflater?.inflate(R.menu.menu_main, mainMenu?.menu)
+
+        binding.moreButton.setOnClickListener {
+
+            mainMenu?.setOnMenuItemClickListener { item: MenuItem ->
+                when (item.itemId) {
+                    R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
+                    R.id.action_reset -> { storyListViewModel.removeAll(); true }
+                    R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
+                    R.id.action_close_console -> {
+                        setConsoleVisibility(false)
+                        true
+                    }
+                    else -> super.onOptionsItemSelected(item)
+                }
+            }
+            mainMenu?.show()
+        }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> { startActivity(Intent(this, SettingsActivity::class.java)); true }
-            R.id.action_reset -> { storyListViewModel.removeAll(); true }
-            R.id.action_show_webview -> { startActivity(Intent(this, CaptchaActivity::class.java)); true }
-            else -> super.onOptionsItemSelected(item)
-        }
+
+    override fun restart(story: StoryListItem) {
+        scheduleDownload(story.url)
+    }
+
+    override fun unnew(story: StoryListItem) {
+        unNewStory(story)
+    }
+
+    override fun forcedownload(story: StoryListItem) {
+        scheduleDownload(story.url, true)
+    }
+
+    override fun delete(story: StoryListItem) {
+        storyListViewModel.remove(story)
     }
 }
