@@ -6,7 +6,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("com.google.devtools.ksp") version "2.3.6"
+    id("com.google.devtools.ksp") version "2.3.7"
     id("com.chaquo.python") version "17.0.0"
 }
 
