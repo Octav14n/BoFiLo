@@ -93,3 +93,21 @@ jobs:
             ./BoFiLo_*.apk
           prerelease: true
           generate_release_notes: true
+  versioning:
+    name: Increase Version
+    needs:
+      - apk
+      - release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/v6
+      - name: Generate new Version
+        run: sed -E -i 's/^(VERSION_BUILD=)([0-9]+)$/echo "\1$((\2+1))"/e' app/version.properties
+      - name: Push
+        run: |
+          git config user.name github-action
+          git config user.email github-actions@github.com
+          git add app/version.properties
+          git commit -m "Increase Version [skip ci]"
+          git push
