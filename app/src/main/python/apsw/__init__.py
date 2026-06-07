@@ -1,0 +1,2 @@
+class VFS:
+    pass

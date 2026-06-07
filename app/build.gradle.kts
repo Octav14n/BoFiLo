@@ -50,12 +50,12 @@ base {
 
 configure<ApplicationExtension> {
     namespace = "eu.schnuff.bofilo"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "eu.schnuff.bofilo"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = gVersionCode
         versionName = gVersion
 
@@ -162,6 +162,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.preference.ktx)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.concurrent)
     ksp(libs.androidx.room.compiler)
     implementation(libs.tedpermission.normal)
     implementation(libs.material)
