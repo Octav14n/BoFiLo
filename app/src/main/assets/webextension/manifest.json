@@ -10,13 +10,14 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.fanfiction.net/*", "*://archiveofourown.org/*"],
-      "js": ["main.js"]
-    },
-    {
       "matches": ["*://challenges.cloudflare.com/*"],
       "js": ["captcha.js"],
       "all_frames": true
+    },
+    {
+      "exclude_matches": ["*://challenges.cloudflare.com/*"],
+      "matches": ["*://*/*"],
+      "js": ["main.js"]
     }
   ],
   "permissions": [
