@@ -162,20 +162,26 @@ class MyAdapter(object):
         return getattr(self.adapter, attr)
 
 
-class MyFetcher(fanficfare.fetchers.base_fetcher.Fetcher):
+class MyFetcher(fanficfare.fetchers.fetcher_requests.RequestsFetcher):
     def __init__(self, get_config_fn, get_config_list_fn):
         super(MyFetcher, self).__init__(get_config_fn, get_config_list_fn)
         self.handler = get_handler()
 
     def request(self, *args, **kargs):
         # print("Fetcher request fetcher.request(%s, %s)" % (str(args), str(kargs)))
-        ret = fanficfare.fetchers.base_fetcher.FetcherResponse(
-            self.handler.web_request(args[0], args[1], kargs),
-            args[0],
-            False
-        )
-        # print(ret.content)
-        return ret
+        url = args[1]
+        if isinstance(url, str) and (url.startswith('https://www.fanfiction.net/') or url.startswith('https://archiveofourown.org/')):
+            # print("request for '" + url + "' handled by custom fetcher.")
+            ret = fanficfare.fetchers.base_fetcher.FetcherResponse(
+                self.handler.web_request(args[0], args[1], kargs),
+                args[0],
+                False
+            )
+            # print(ret.content)
+            return ret
+        else:
+            # print("request for '" + url + "' handled by native fetcher.")
+            return super(MyFetcher, self).request(*args, **kargs)
 
     def __setattr__(self, key, value):
         # print("Fetcher setattr fetcher.%s = %s" % (str(key), str(value)))

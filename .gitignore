@@ -154,6 +154,7 @@ captures/
 *.ipr
 *~
 *.swp
+.idea/caches/
 
 # Android Patch
 gen-external-apklibs
