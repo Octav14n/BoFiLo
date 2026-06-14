@@ -1,4 +1,4 @@
 --extra-index-url https://test.pypi.org/simple/
 file:./src/main/python/apsw/
-FanFicFare==4.58.7
+FanFicFare==4.58.9
 Pillow
