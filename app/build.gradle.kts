@@ -39,7 +39,7 @@ gradle.taskGraph.whenReady {
     }
 }
 
-val gVersionCode = System.getenv("bofilo.gVersionCode") ?: 10
+val gVersionCode: Int = Integer.parseInt(System.getenv("bofilo_gVersionCode") ?: "10", 10)
 val gVersion = "$gVersionCode.${"%04d".format(gVersionBuild)}"
 logger.info("Building Version {}", version)
 

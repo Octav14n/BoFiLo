@@ -141,20 +141,22 @@ object StoryDownloadGeckoHelper {
             if (ret.isNullOrEmpty())
                 continue
 
-            if (
-                ret.contains("| FanFiction</title>") ||
-                ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>") ||
-                ret.contains("<img alt=\"Archive of Our Own\"")) {
-                // handler.sendEmptyMessage(1)
-                NotificationManagerCompat.from(context).cancel(Constants.NOTIFICATION_ID_CAPTCHA)
-                return ret
-            //} else if (ret.contains("<meta http-equiv=\"refresh\"")) {
-            //    // Do nothing, site will reload by itself.
-            } else if (ret.contains("<body class=\"no-js\">")) {
+            if (ret.contains("<body class=\"no-js\">")) {
                 createNotification(context, url)
             } else {
-                Log.d(this::class.simpleName, "Unhandled HTML\n\n $ret")
+//                if (
+//                ret.contains("| FanFiction</title>") ||
+//                ret.contains("<p>New chapter/story can take up to 15 minutes to show up.</p>") ||
+//                ret.contains("<img alt=\"Archive of Our Own\"")) {
+//                // handler.sendEmptyMessage(1)
+                NotificationManagerCompat.from(context).cancel(Constants.NOTIFICATION_ID_CAPTCHA)
+                return ret
+                //} else if (ret.contains("<meta http-equiv=\"refresh\"")) {
+                //    // Do nothing, site will reload by itself.
             }
+//            else {
+//                Log.d(this::class.simpleName, "Unhandled HTML\n\n $ret")
+//            }
         }
     }
 
