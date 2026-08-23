@@ -20,8 +20,8 @@ object Helpers {
 
     // This one helps to copy file content between uris by using ContentResolver.
     // We can copy from and to DocumentFiles and normal "file://..." (for cacheDir) uris with this function.
-    fun ContentResolver.copyFile(src: Uri, dst: Uri) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && src.scheme == CONTENT_SCHEME && dst.scheme == CONTENT_SCHEME) {
+    fun ContentResolver.copyFile(src: Uri, dst: Uri): Uri? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && src.scheme == CONTENT_SCHEME && dst.scheme == CONTENT_SCHEME) {
             DocumentsContract.copyDocument(this, src, dst) // cant copy to cache/data directory -.-
         } else {
             val input = this.openInputStream(src)?.buffered()
@@ -39,6 +39,7 @@ object Helpers {
 
             input.close()
             output.close()
+            return dst
         }
     }
 

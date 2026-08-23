@@ -23,7 +23,7 @@ private const val CHANNEL_ID = "StoryWriteService"
 private const val NOTIFICATION_ID = 3002
 
 object StoryWriteService {
-    fun start(context: Context, srcUri: Uri, dstUri: Uri) {
+    fun start(context: Context, srcUri: Uri, dstUri: Uri, resolvedUriCallback: (Uri) -> Unit) {
         Log.d(this::class.simpleName, "Now writing to %s".format(dstUri))
 
         while (true) {
@@ -34,7 +34,7 @@ object StoryWriteService {
                         context,
                         arrayOf(dstUri.toFile().absolutePath),
                         arrayOf(null),
-                        null
+                        { path, uri -> resolvedUriCallback(uri) }
                     )
                 break
             } catch (e: Exception) {
@@ -49,7 +49,7 @@ object StoryWriteService {
         }
     }
 
-    fun start(context: Context, @Suppress("UNUSED_PARAMETER") item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
+    fun start(context: Context, @Suppress("UNUSED_PARAMETER") item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String, resolvedUriCallback: (Uri) -> Unit) {
         val dstUri = getDstUri(context, dstDirUri, dstFileName, dstMimeType)
 
         if (dstUri == null) {
@@ -58,7 +58,7 @@ object StoryWriteService {
             return
         }
 
-        start(context, srcUri, dstUri)
+        start(context, srcUri, dstUri, resolvedUriCallback)
     }
 
     private fun getDstUri(context: Context, dstDirUri: Uri, fileName: String, mimeType: String) : Uri? {
