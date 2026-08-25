@@ -1,12 +1,18 @@
 package eu.schnuff.bofilo.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.BlendMode
 import android.graphics.BlendModeColorFilter
 import android.os.Build
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import eu.schnuff.bofilo.R
 import eu.schnuff.bofilo.databinding.StoryListDetailBinding
@@ -31,6 +37,37 @@ class StoryView(val binding: StoryListDetailBinding) : RecyclerView.ViewHolder(b
         binding.title.text = story.title
         binding.url.text = story.url
 
+        val localContext = binding.root.context
+
+        binding.url.setOnLongClickListener {
+            val clipboard = localContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("BoFiLo URL", story.url)
+            clipboard.setPrimaryClip(clip)
+            true
+        }
+
+        binding.cardContainer.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW)
+            val targetUri = story.uri?.toUri()
+
+            if(targetUri == null) {
+                Toast.makeText(
+                    localContext,
+                    localContext.getString(R.string.no_uri),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
+
+            val mimeType = localContext.contentResolver.getType(targetUri)
+            intent.setDataAndType(targetUri, mimeType)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            localContext.startActivity(
+                Intent.createChooser(intent,
+                localContext.getString(R.string.choose_an_app))
+            )
+        }
 
         // initialize progress. Assume we are finished already.
         binding.progress.visibility = View.GONE

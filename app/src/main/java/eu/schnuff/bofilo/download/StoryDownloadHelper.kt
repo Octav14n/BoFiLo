@@ -105,7 +105,7 @@ class StoryDownloadHelper(
             wakeLock.acquire(60000)
             try {
                 cacheFile.writeBytes(ByteArray(0))
-                fileInteraction.copyFile(it.uri, cacheFile.toUri())
+                fileInteraction.copyFile(it.uri, cacheFile.toUri()) { uri: Uri -> updateUri(uri) }
                 cacheFile.setLastModified(0) //it.lastModified)
                 filename = cacheFile.name
             } catch (e: Throwable) {
@@ -203,7 +203,7 @@ class StoryDownloadHelper(
                     fileInteraction.copyFile(
                         cacheFile.toUri(),
                         originalFile!!.uri,
-                        async = true
+                        { uri -> updateUri(uri) }
                     )
                 } else {
                     fileInteraction.copyFile(
@@ -211,7 +211,8 @@ class StoryDownloadHelper(
                         cacheFile.toUri(),
                         dstDir,
                         Constants.MIME_EPUB,
-                        filename
+                        filename,
+                        { uri -> updateUri(uri) }
                     )
                 }
             }
@@ -226,10 +227,15 @@ class StoryDownloadHelper(
         viewModel.setFinished(item)
     }
 
+    private fun updateUri(fileUri: Uri) {
+        Log.e("SDH", "uri: $fileUri")
+        viewModel.setUri(item, fileUri)
+    }
+
     interface FileInteraction {
         fun fromUri(uri: Uri): FileWrapper
-        fun copyFile(src: Uri, dst: Uri, async: Boolean = false)
-        fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String)
+        fun copyFile(src: Uri, dst: Uri, resolvedUriCallback: (Uri) -> Unit)
+        fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String, resolvedUriCallback: (Uri) -> Unit)
     }
 
     companion object {

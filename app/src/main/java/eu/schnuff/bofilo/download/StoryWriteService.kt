@@ -23,33 +23,39 @@ private const val CHANNEL_ID = "StoryWriteService"
 private const val NOTIFICATION_ID = 3002
 
 object StoryWriteService {
-    fun start(context: Context, srcUri: Uri, dstUri: Uri) {
+    fun start(context: Context, srcUri: Uri, dstUri: Uri, resolvedUriCallback: (Uri) -> Unit) {
         Log.d(this::class.simpleName, "Now writing to %s".format(dstUri))
 
-        while (true) {
-            try {
-                context.contentResolver.copyFile(srcUri, dstUri)
-                if (dstUri.scheme == "file")
-                    MediaScannerConnection.scanFile(
-                        context,
-                        arrayOf(dstUri.toFile().absolutePath),
-                        arrayOf(null),
-                        null
-                    )
-                break
-            } catch (e: Exception) {
-                Log.e(this::class.simpleName, "Could not write to destination.", e)
-            }
+
+        try {
+            context.contentResolver.copyFile(srcUri, dstUri)
+        } catch (e: Exception) {
+            Log.e(this::class.simpleName, "Could not write to destination.", e)
         }
-        if (srcUri.scheme == ContentResolver.SCHEME_FILE) {
+
+
+        if (dstUri.scheme == ContentResolver.SCHEME_FILE) {
             Log.d(this::class.simpleName, "Now deleting $srcUri .")
             srcUri.path?.let {
                 File(it).delete()
             }
+
+            try {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(dstUri.toFile().absolutePath),
+                    arrayOf(null),
+                    { path, uri -> resolvedUriCallback(uri) }
+                )
+            } catch (e: Exception) {
+                Log.e(this::class.simpleName, "Could not retrieve media file", e)
+            }
+        } else {
+            resolvedUriCallback(dstUri)
         }
     }
 
-    fun start(context: Context, @Suppress("UNUSED_PARAMETER") item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String) {
+    fun start(context: Context, @Suppress("UNUSED_PARAMETER") item: StoryListItem, srcUri: Uri, dstDirUri: Uri, dstFileName: String, dstMimeType: String, resolvedUriCallback: (Uri) -> Unit) {
         val dstUri = getDstUri(context, dstDirUri, dstFileName, dstMimeType)
 
         if (dstUri == null) {
@@ -58,7 +64,7 @@ object StoryWriteService {
             return
         }
 
-        start(context, srcUri, dstUri)
+        start(context, srcUri, dstUri, resolvedUriCallback)
     }
 
     private fun getDstUri(context: Context, dstDirUri: Uri, fileName: String, mimeType: String) : Uri? {

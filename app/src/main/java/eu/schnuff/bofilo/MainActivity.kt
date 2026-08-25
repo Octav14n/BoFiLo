@@ -29,6 +29,7 @@ import eu.schnuff.bofilo.persistence.storylist.StoryListViewModel
 import eu.schnuff.bofilo.settings.Settings
 import eu.schnuff.bofilo.ui.StoryActionInterface
 import eu.schnuff.bofilo.ui.StoryListAdapter
+import eu.schnuff.bofilo.utils.PreferencesManager
 import kotlin.concurrent.thread
 
 
@@ -49,15 +50,7 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
                 return
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()) {
-            //todo when permission is granted
-        } else {
-            //request for the permission
-            val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            intent.data = Uri.fromParts("package", packageName, null)
-            startActivity(intent)
-        }
-
+        requestExternalStorageManagementPermission()
         // Initiate View
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -110,6 +103,35 @@ class MainActivity : AppCompatActivity(), StoryActionInterface {
                     //.setAction("Action", null)
         }
 
+    }
+
+    private fun requestExternalStorageManagementPermission() {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            //todo when permission is granted
+            return
+        }
+
+        if (Environment.isExternalStorageManager()) {
+            return
+        }
+
+
+        var prefs = PreferencesManager(this)
+
+        var lastIntro = prefs.getVersionForLastIntro()
+
+        if(lastIntro <= 0) {
+            //request for the permission, only once.
+            prefs.setVersionForLastIntro(1)
+            val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            intent.data = Uri.fromParts("package", packageName, null)
+            startActivity(intent)
+        }
+
+        if(lastIntro <= 1) {
+            // additional requests are added here. Prevents re-requesting denied permissions.
+        }
     }
 
     override fun onResume() {
