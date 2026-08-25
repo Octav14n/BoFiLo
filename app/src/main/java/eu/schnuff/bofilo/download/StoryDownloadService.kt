@@ -132,13 +132,9 @@ class StoryDownloadService(
 
 
     override fun fromUri(uri: Uri): FileWrapper = FileWrapper.fromUri(context, uri)
-    override fun copyFile(src: Uri, dst: Uri, async: Boolean, resolvedUriCallback: (Uri) -> Unit) {
-        if (async) {
-            StoryWriteService.start(context, src, dst, resolvedUriCallback)
-        } else {
-            val uri = context.contentResolver.copyFile(src, dst)
-            uri?.let { resolvedUriCallback(it) }
-        }
+
+    override fun copyFile(src: Uri, dst: Uri, resolvedUriCallback: (Uri) -> Unit) {
+        StoryWriteService.start(context, src, dst, resolvedUriCallback)
     }
 
     override fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String, resolvedUriCallback: (Uri) -> Unit) {

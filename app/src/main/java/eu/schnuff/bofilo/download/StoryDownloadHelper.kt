@@ -203,7 +203,6 @@ class StoryDownloadHelper(
                     fileInteraction.copyFile(
                         cacheFile.toUri(),
                         originalFile!!.uri,
-                        async = true,
                         { uri -> updateUri(uri) }
                     )
                 } else {
@@ -235,7 +234,7 @@ class StoryDownloadHelper(
 
     interface FileInteraction {
         fun fromUri(uri: Uri): FileWrapper
-        fun copyFile(src: Uri, dst: Uri, async: Boolean = false, resolvedUriCallback: (Uri) -> Unit)
+        fun copyFile(src: Uri, dst: Uri, resolvedUriCallback: (Uri) -> Unit)
         fun copyFile(item: StoryListItem, src: Uri, dstDir: Uri, mimeType: String, fileName: String, resolvedUriCallback: (Uri) -> Unit)
     }
 

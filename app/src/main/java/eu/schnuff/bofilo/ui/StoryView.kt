@@ -47,7 +47,21 @@ class StoryView(val binding: StoryListDetailBinding) : RecyclerView.ViewHolder(b
         }
 
         binding.cardContainer.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, story.uri?.toUri())
+            val intent = Intent(Intent.ACTION_VIEW)
+            val targetUri = story.uri?.toUri()
+
+            if(targetUri == null) {
+                Toast.makeText(
+                    localContext,
+                    localContext.getString(R.string.no_uri),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
+
+            val mimeType = localContext.contentResolver.getType(targetUri)
+            intent.setDataAndType(targetUri, mimeType)
             localContext.startActivity(
                 Intent.createChooser(intent,
                 localContext.getString(R.string.choose_an_app))
