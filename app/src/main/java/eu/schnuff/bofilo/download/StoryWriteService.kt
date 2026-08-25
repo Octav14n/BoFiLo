@@ -40,12 +40,16 @@ object StoryWriteService {
                 File(it).delete()
             }
 
-            MediaScannerConnection.scanFile(
-                context,
-                arrayOf(dstUri.toFile().absolutePath),
-                arrayOf(null),
-                { path, uri -> resolvedUriCallback(uri) }
-            )
+            try {
+                MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(dstUri.toFile().absolutePath),
+                    arrayOf(null),
+                    { path, uri -> resolvedUriCallback(uri) }
+                )
+            } catch (e: Exception) {
+                Log.e(this::class.simpleName, "Could not retrieve media file", e)
+            }
         } else {
             resolvedUriCallback(dstUri)
         }

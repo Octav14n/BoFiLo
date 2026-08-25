@@ -62,6 +62,7 @@ class StoryView(val binding: StoryListDetailBinding) : RecyclerView.ViewHolder(b
 
             val mimeType = localContext.contentResolver.getType(targetUri)
             intent.setDataAndType(targetUri, mimeType)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             localContext.startActivity(
                 Intent.createChooser(intent,
                 localContext.getString(R.string.choose_an_app))
